@@ -1,16 +1,16 @@
-const express=require("express")
+const express = require("express")
 
-const authMiddleware=require("../middleware/auth/authMiddleware")
+const authMiddleware = require("../middleware/auth/authMiddleware")
 
-const validateAllowedField=require("../middleware/validation/validateAllowedField")
-const validate=require("../middleware/validation/validate")
+const validateAllowedField = require("../middleware/validation/validateAllowedField")
+const validate = require("../middleware/validation/validate")
 
-const addressController=require("../controllers/addressController")
+const addressController = require("../controllers/addressController")
 
-const {createAddressValidation, updateAddressValidation}=require("../middleware/validation/addressValidation")
+const { createAddressValidation, updateAddressValidation } = require("../middleware/validation/addressValidation")
 const { mongoIdValidation } = require("../middleware/validation/commonValidation")
 
-const router=express.Router()
+const router = express.Router()
 
 router.post("/",
     authMiddleware,
@@ -38,7 +38,7 @@ router.get("/",
 router.patch("/:id",
     authMiddleware,
     mongoIdValidation("id"),
-        validateAllowedField([
+    validateAllowedField([
         "name",
         "phoneNo",
         "houseNo",
@@ -66,4 +66,4 @@ router.patch("/:id/default",
     validate,
     addressController.setDefaultAddress
 )
-module.exports=router    
+module.exports = router    

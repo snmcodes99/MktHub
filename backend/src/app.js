@@ -6,6 +6,7 @@ const productRoutes=require("./routes/productRoutes")
 const sellerRequestRoutes=require("./routes/sellerRequestRoutes")
 const addressRoutes=require("./routes/addressRoutes")
 const cartRoutes=require("./routes/cartRoutes")
+const orderRoutes=require("./routes/orderRoutes")
 const app=express();
 app.use(express.json())
 
@@ -21,6 +22,7 @@ app.use("/api/product",productRoutes)
 app.use("/api/seller-request",sellerRequestRoutes)
 app.use("/api/addresses",addressRoutes)
 app.use("/api/cart",cartRoutes)
+app.use("/api/order",orderRoutes)
 
 app.use(errorMiddleware)
 module.exports=app

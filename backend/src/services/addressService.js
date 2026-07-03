@@ -5,16 +5,14 @@ const createAddress=async(addressData,userData)=>{
     const {name,phoneNo,houseNo,street,city,state,country,zipCode,addressType,isDefault}=addressData
     const addressCount=await AddressModel.countDocuments({user:userData._id})
     let defaultAddress=isDefault
+    if(addressCount>=5){
+        throw new ApiError(400,"maxlimit of addresses is 5")
+    }
     if(addressCount===0){
         defaultAddress=true
     }
     if(defaultAddress){
-        await AddressModel.updateMany(
-            {
-                user:userData._id,
-                isDefault:true
-            },{  isDefault:false}
-        )
+        await AddressModel.updateMany({user:userData._id,isDefault:true},{  isDefault:false})
     }
     const newAddress=await AddressModel.create({
         user:userData._id,

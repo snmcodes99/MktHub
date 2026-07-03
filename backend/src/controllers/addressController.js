@@ -5,6 +5,7 @@ const createAddress=async(req,res)=>{
     res.status(201).json({
         success:true,
         message:"Address saved successfully",
+        data:newAddress,
     })
 }
 const getMyAddresses=async(req,res)=>{

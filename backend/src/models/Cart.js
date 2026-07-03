@@ -25,5 +25,11 @@ const cartSchema=new mongoose.Schema({
 },{
     timestamps:true
 })
-
-module.exports=mongoose.model("Cart",cartSchema)
+cartSchema.set("toJSON",{
+    transform:function(doc,ret){
+        delete ret.__v
+        return ret
+    }
+})
+const cartModel=mongoose.model("Cart",cartSchema)
+module.exports=cartModel
