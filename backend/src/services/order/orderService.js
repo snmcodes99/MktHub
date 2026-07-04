@@ -28,6 +28,9 @@ const placeOrder = async (orderData, userData) => {
 const getMyOrders = async (userData) => {
     const orders = await OrderModel.find({
         user: userData._id
+    }).populate({
+        path: "items.product",
+        select: "name images"
     }).sort({
         createdAt: -1
     })
@@ -65,6 +68,28 @@ const cancelOrder = async (orderId, userData) => {
     return order
 
 }
+
+const returnOrder = async (orderId, userData) => {
+    const order = await OrderModel.findById(orderId)
+    if (!order) {
+        throw new ApiError(404, "Order not found")
+    }
+    if (order.user.toString() !== userData._id.toString()) {
+        throw new ApiError(403, "You are not authorized to return this order")
+    }
+    if (order.orderStatus === "RETURNED") {
+        throw new ApiError(400, "Order is already returned")
+    }
+    if (order.orderStatus !== "DELIVERED") {
+        throw new ApiError(400, "Only delivered orders can be returned")
+    }
+    order.orderStatus = "RETURNED"
+    // Handle stock and refunds logic if needed here
+    await order.save()
+
+    return order
+}
+
 const getAllOrders = async () => {
     const orders = await OrderModel.find()
         .sort({
@@ -73,22 +98,33 @@ const getAllOrders = async () => {
     return orders
 }
 const validTransitions = {
+    PENDING: [
+        "PLACED",
+        "CANCELLED"
+    ],
     PLACED: [
         "PROCESSING",
+        "SHIPPED",
+        "DELIVERED",
         "CANCELLED"
     ],
     PROCESSING: [
         "SHIPPED",
+        "DELIVERED",
         "CANCELLED"
     ],
     SHIPPED: [
-        "OUT_FOR_DELIVERY"
+        "OUT_FOR_DELIVERY",
+        "DELIVERED"
     ],
     OUT_FOR_DELIVERY: [
         "DELIVERED"
     ],
-    DELIVERED: [],
-    CANCELLED: []
+    DELIVERED: [
+        "RETURNED"
+    ],
+    CANCELLED: [],
+    RETURNED: []
 }
 const updateOrderStatus = async (orderId, status) => {
     const order = await OrderModel.findById(orderId)
@@ -102,8 +138,53 @@ const updateOrderStatus = async (orderId, status) => {
         throw new ApiError(400, "Invalid order status transition")
     }
     order.orderStatus = status
+    if (status === "DELIVERED" && order.paymentMethod === "COD") {
+        order.paymentStatus = "PAID"
+    }
     await order.save()
     return order
+}
+
+const mongoose = require("mongoose")
+
+const getSellerOrders = async (sellerId) => {
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+    
+    const sellerProducts = await ProductModel.find({ seller: sellerObjectId }).select('_id');
+    const sellerProductIds = sellerProducts.map(p => p._id);
+
+    return await OrderModel.aggregate([
+        { $match: { "items.product": { $in: sellerProductIds } } },
+        { $unwind: "$items" },
+        { $match: { "items.product": { $in: sellerProductIds } } },
+        {
+            $group: {
+                _id: "$_id",
+                orderNumber: { $first: "$orderNumber" },
+                orderStatus: { $first: "$orderStatus" },
+                createdAt: { $first: "$createdAt" },
+                user: { $first: "$user" },
+                totalPrice: { $sum: { $multiply: ["$items.sellingPrice", "$items.quantity"] } },
+                items: { $push: "$items" }
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "customer"
+            }
+        },
+        { $unwind: { path: "$customer", preserveNullAndEmptyArrays: true } },
+        {
+            $addFields: {
+                customerName: "$customer.name"
+            }
+        },
+        { $project: { customer: 0, user: 0 } },
+        { $sort: { createdAt: -1 } }
+    ]);
 }
 
 module.exports = {
@@ -111,6 +192,8 @@ module.exports = {
     getMyOrders,
     getOrderById,
     cancelOrder,
+    returnOrder,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    getSellerOrders
 }

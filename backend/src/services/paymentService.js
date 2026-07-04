@@ -20,7 +20,7 @@ const processPayment = async (orderId, paymentData, userData) => {
     if (order.orderStatus === "CANCELLED") {
         throw new ApiError(400, "Cannot pay for a cancelled order")
     }
-    const paymentResult = await simulatePayment(status)
+    const paymentResult = await simulatePayment(order.totalPrice)
     if (paymentResult.status === "SUCCESS") {
         await reduceStock(order.items)
         await clearCart(userData)
@@ -41,19 +41,24 @@ const processPayment = async (orderId, paymentData, userData) => {
 
 }
 
-const simulatePayment = async (status) => {
-    if (status === "SUCCESS") {
+const simulatePayment = async (amount) => {
+    // Business rule: simulate a realistic payment delay
+    await new Promise(resolve => setTimeout(resolve, 1500))
+
+    // Business rule: 90% success rate for realistic testing
+    const isSuccess = Math.random() < 0.9;
+
+    if (isSuccess) {
         return {
             status: "SUCCESS",
             transactionId: `TXN-${Date.now()}`,
             message: "Payment processed successfully"
         }
-
     }
     return {
         status: "FAILED",
-        transactionId: null,
-        message: "Payment failed. Please try again"
+        transactionId: `TXN-${Date.now()}`,
+        message: "Payment declined by the bank. Please try again."
     }
 }
 

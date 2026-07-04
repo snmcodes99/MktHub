@@ -16,7 +16,19 @@ const registerSerice = async (data) => {
         role: "CUSTOMER",
     };
     const user = await UserModel.create(userData);
-    return user;
+    
+    const JWT_SECRET = process.env.JWT_SECRET;
+    const token = jwt.sign(
+        {
+            id: user._id,
+        },
+        JWT_SECRET,
+        {
+            expiresIn: "7d",
+        }
+    );
+    
+    return { user, token };
 };
 
 const loginService = async (data) => {
@@ -69,8 +81,35 @@ const changePassword=async(userData,passwordData)=>{
     return
 }
 
+const updateProfile = async (userData, updateData) => {
+    const { name, email } = updateData
+    
+    // Check if email is being changed and is already taken
+    if (email && email !== userData.email) {
+        const isEmailTaken = await UserModel.findOne({ email, _id: { $ne: userData._id } })
+        if (isEmailTaken) {
+            throw new ApiError(409, "Email is already taken")
+        }
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+        userData._id,
+        {
+            ...(name && { name }),
+            ...(email && { email })
+        },
+        { new: true, runValidators: true }
+    )
+
+    if (!updatedUser) {
+        throw new ApiError(404, "User not found")
+    }
+    
+    return updatedUser
+}
+
 const logout=async()=>{
     return
 }
 
-module.exports = { registerSerice, loginService, getCurrentUser, changePassword, logout};
+module.exports = { registerSerice, loginService, getCurrentUser, changePassword, updateProfile, logout};

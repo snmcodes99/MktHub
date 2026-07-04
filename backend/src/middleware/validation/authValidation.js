@@ -22,8 +22,14 @@ const changePasswordValidation=[
         .withMessage("Password must be at least 6 characters")
 ]
 
+const updateProfileValidation=[
+    body("name").optional().trim().notEmpty().withMessage("Name cannot be empty").bail().isLength({max:50}).withMessage("Name can not exceed 50 letters"),
+    body("email").optional().trim().notEmpty().withMessage("email cannot be empty").bail().isEmail().withMessage("Invalid email format"),
+]
+
 module.exports={
     registerValidation,
     loginValidation,
-    changePasswordValidation
+    changePasswordValidation,
+    updateProfileValidation
 }

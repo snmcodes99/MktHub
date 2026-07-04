@@ -47,15 +47,28 @@ router.patch("/:id/cancel",
     orderController.cancelOrder
 )
 
+router.patch("/:id/return",
+    authMiddleware,
+    mongoIdValidation("id"),
+    validate,
+    orderController.returnOrder
+)
+
 router.get("/",
     authMiddleware,
     authorize("ADMIN"),
     orderController.getAllOrders
 )
 
+router.get("/seller/orders",
+    authMiddleware,
+    authorize("SELLER", "ADMIN"),
+    orderController.getSellerOrders
+)
+
 router.patch("/:id/status",
     authMiddleware,
-    authorize("ADMIN"),
+    authorize("SELLER", "ADMIN"),
     validateAllowedFields([
         "status"
     ]),

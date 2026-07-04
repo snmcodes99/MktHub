@@ -3,7 +3,7 @@ const mongoose=require("mongoose")
 const orderItemSchema=new mongoose.Schema({
     product:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Product",
+        ref:"Products",
         required:true
     },
     productName:{
@@ -119,7 +119,8 @@ const orderSchema=new mongoose.Schema({
             "SHIPPED",
             "OUT_FOR_DELIVERY",
             "DELIVERED",
-            "CANCELLED"
+            "CANCELLED",
+            "RETURNED"
         ],
         default:"PENDING"
     },
@@ -156,6 +157,13 @@ const orderSchema=new mongoose.Schema({
 },{
     timestamps:true
 })
+
+// Indexes for performance optimization, especially for the Seller Dashboard aggregations
+orderSchema.index({ "items.product": 1 }); // Essential for matching orders containing a seller's products
+orderSchema.index({ orderStatus: 1 }); // Filtering by status (e.g., PENDING)
+orderSchema.index({ paymentStatus: 1, orderStatus: 1 }); // Revenue calculation
+orderSchema.index({ createdAt: -1 }); // Recent orders sorting
+
 orderSchema.set("toJSON",{
     transform:function(doc,ret){
         delete ret.__v

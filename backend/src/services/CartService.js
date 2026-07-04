@@ -56,12 +56,13 @@ const getMyCart=async(userData)=>{
         user:userData._id
     }).populate({
         path:"items.product",
-        select:"name slug sellingPrice stock"
+        select:"name slug sellingPrice stock images"
     })
     if(!cart){
         return{
             items:[],
-            totalPrice:0
+            totalPrice:0,
+            totalItems: 0
         }
     }
     let totalPrice=0
@@ -69,8 +70,10 @@ const getMyCart=async(userData)=>{
         totalPrice+=item.product.sellingPrice*item.quantity
     })
     return{
-        cart,
-        totalPrice
+        _id: cart._id,
+        items: cart.items,
+        totalPrice,
+        totalItems: cart.items.length
     }
 }
 

@@ -4,6 +4,9 @@ const ApiError = require("../utils/ApiErrors")
 
 const createSellerRequest = async (requestData, userData) => {
     const { shopName, businessDescription, businessAddress, documents } = requestData
+    if (userData.isBanned) {
+        throw new ApiError(403, "You have been banned from selling on this platform.")
+    }
     const requestPending = await sellerRequestModel.exists({
         user: userData._id,
         status: "PENDING"
@@ -26,7 +29,7 @@ const getMySellerRequests = async (userData) => {
 }
 
 const getAllSellerRequests = async () => {
-    const sellerRequestData = await SellerRequestModel.find()
+    const sellerRequestData = await sellerRequestModel.find()
         .sort({ createdAt: -1 })
         .populate("user", "name email")
         .populate("reviewedBy", "name")
@@ -34,7 +37,7 @@ const getAllSellerRequests = async () => {
 }
 
 const approveSellerRequest = async (requestId, adminData) => {
-    const sellerRequest = await SellerRequestModel.findById(requestId)
+    const sellerRequest = await sellerRequestModel.findById(requestId)
     if (!sellerRequest) {
         throw new ApiError(404, "Seller request not found")
     }
@@ -53,7 +56,7 @@ const approveSellerRequest = async (requestId, adminData) => {
 }
 
 const rejectSellerRequest=async(requestId,adminData,rejectionReason)=>{
-    const sellerRequest=await SellerRequestModel.findById(requestId)
+    const sellerRequest=await sellerRequestModel.findById(requestId)
     if(!sellerRequest){
         throw new ApiError(404,"Seller request not found")
     }

@@ -25,6 +25,10 @@ const UserSchema=new mongoose.Schema({
         enum:["ADMIN","CUSTOMER","SELLER"],
         default:"CUSTOMER",
         required:true
+    },
+    isBanned: {
+        type: Boolean,
+        default: false
     }
     ,
     phoneNo:{

@@ -113,10 +113,30 @@ const deleteProduct = async (productId, seller) => {
     return product
 }
 
+const toggleProductActive = async (productId, seller) => {
+    const product = await ProductModel.findById(productId);
+    if (!product) {
+        throw new ApiError(404, "product not found")
+    }
+    const sellerId = seller._id
+    const sellerRole = seller.role
+
+    if (sellerRole === "SELLER") {
+        if (product.seller.toString() !== sellerId.toString()) {
+            throw new ApiError(403, "you are not allowed to update this product");
+        }
+    }
+    
+    product.isActive = !product.isActive;
+    await product.save();
+    return product;
+}
+
 module.exports = {
     createProduct,
     getAllProducts,
     getProductByid,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    toggleProductActive
 }

@@ -1,7 +1,7 @@
 const express=require("express");
 const authController=require("../controllers/authController");
 const validateAllowedFields=require("../middleware/validation/validateAllowedField");
-const { registerValidation,  loginValidation, changePasswordValidation }=require("../middleware/validation/authValidation");
+const { registerValidation, loginValidation, changePasswordValidation, updateProfileValidation }=require("../middleware/validation/authValidation");
 const validate = require("../middleware/validation/validate");
 const authMiddleware = require("../middleware/auth/authMiddleware");
 const router=express.Router();
@@ -31,6 +31,16 @@ router.patch("/change-password",
     changePasswordValidation,
     validate,
     authController.changePassword
+)
+router.patch("/profile",
+    authMiddleware,
+    validateAllowedFields([
+        "name",
+        "email"
+    ]),
+    updateProfileValidation,
+    validate,
+    authController.updateProfile
 )
 router.post("/logout",
     authMiddleware,

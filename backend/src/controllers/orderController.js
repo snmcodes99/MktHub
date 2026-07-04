@@ -38,6 +38,15 @@ const cancelOrder=async(req,res)=>{
     })
 }
 
+const returnOrder=async(req,res)=>{
+    const order=await orderService.returnOrder(req.params.id,req.user)
+    res.status(200).json({
+        success:true,
+        message:"Order returned successfully",
+        data:order
+    })
+}
+
 const getAllOrders=async(req,res)=>{
     const orders=await orderService.getAllOrders()
     res.status(200).json({
@@ -56,11 +65,23 @@ const updateOrderStatus=async(req,res)=>{
     })
 }
 
+const getSellerOrders = async(req, res) => {
+    // This calls the service which we will add next
+    const orders = await orderService.getSellerOrders(req.user._id)
+    res.status(200).json({
+        success: true,
+        message: "Seller orders fetched successfully",
+        data: orders
+    })
+}
+
 module.exports={
     placeOrder,
     getMyOrders,
     getOrderById,
     cancelOrder,
+    returnOrder,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    getSellerOrders
 }

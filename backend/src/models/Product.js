@@ -75,6 +75,9 @@ ProductScheme.index(
     {seller:1,slug: 1 },
     {unique:true }
 );
+// Indexes for performance optimization, especially for the Seller Dashboard aggregations
+ProductScheme.index({ seller: 1, isActive: 1 }); // Efficient lookup of seller's active products
+ProductScheme.index({ seller: 1, createdAt: -1 }); // Fast sorting of seller's recent products
 ProductScheme.set("toJSON",{
     transform:(doc,ret)=>{
         delete ret.__v;

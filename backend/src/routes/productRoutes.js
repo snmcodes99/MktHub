@@ -62,4 +62,12 @@ router.delete(
     productController.deleteProduct
 );
 
+router.patch("/:id/toggle-active",
+    authMiddleware,
+    authorize("SELLER", "ADMIN"),
+    mongoIdValidation("id"),
+    validate,
+    productController.toggleProductActive
+);
+
 module.exports=router
