@@ -23,7 +23,7 @@ export default function AdminProducts() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["all-products-admin"],
-    queryFn: getProducts,
+    queryFn: () => getProducts({ limit: 100 }),
   })
 
   const deleteMutation = useMutation({

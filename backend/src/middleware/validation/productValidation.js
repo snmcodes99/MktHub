@@ -1,4 +1,4 @@
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 const createProductValidation = [
   body("name")
     .trim()
@@ -31,17 +31,17 @@ const createProductValidation = [
     .notEmpty()
     .withMessage("MRP is required")
     .bail()
-    .isFloat({min:0 })
+    .isFloat({ min: 0 })
     .withMessage("mrp must be a positive number"),
   body("sellingPrice")
     .notEmpty()
     .withMessage("Selling price is required")
     .bail()
-    .isFloat({min:0})
+    .isFloat({ min: 0 })
     .withMessage("Selling price must be a positive number")
     .bail()
-    .custom((value,{req})=>{
-      if(Number(value)>Number(req.body.mrp)) {
+    .custom((value, { req }) => {
+      if (Number(value) > Number(req.body.mrp)) {
         throw new Error("Selling price cannot be greater than mrp");
       }
       return true;
@@ -65,7 +65,7 @@ const createProductValidation = [
     .isBoolean()
     .withMessage("isActive must be a boolean"),
 ]
-const updateProductValidation=[
+const updateProductValidation = [
   body("name")
     .optional()
     .trim()
@@ -119,7 +119,67 @@ const updateProductValidation=[
     .isBoolean()
     .withMessage("isActive must be a boolean"),
 ];
+const getProductsValidation = [
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Page must be a positive integer"),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Limit must be between 1 and 100"),
+
+  query("search")
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage("Search cannot exceed 100 characters"),
+
+  query("category")
+    .optional()
+    .custom((value) => {
+      const ids = value.split(',');
+      const isValid = ids.every(id => /^[0-9a-fA-F]{24}$/.test(id));
+      if (!isValid) {
+        throw new Error("Invalid category id(s)");
+      }
+      return true;
+    }),
+
+  query("minPrice")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Minimum price must be a positive number"),
+
+  query("maxPrice")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Maximum price must be a positive number"),
+  query("brand")
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Brand must be between 2 and 50 characters"),
+
+  query("inStock")
+    .optional()
+    .isBoolean()
+    .withMessage("inStock must be true or false"),
+    
+  query("sort")
+    .optional()
+    .isIn([
+      "price_asc",
+      "price_desc",
+      "createdAt",
+      "-createdAt",
+      "-averageRating",
+    ])
+    .withMessage("Invalid sort option"),
+];
 module.exports = {
   createProductValidation,
   updateProductValidation,
+  getProductsValidation
 };

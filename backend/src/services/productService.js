@@ -2,6 +2,8 @@ const CategoryModel = require("../models/Category");
 const ProductModel = require("../models/Product");
 const slugify = require("slugify");
 const ApiError = require("../utils/ApiErrors");
+const { getPagination, buildPagination } = require("../utils/pagination.utils");
+const { buildProductQuery } = require("../utils/productQuery.util");
 
 const createProduct = async (productdata, sellerId) => {
     const { name, description, brand, category, mrp, sellingPrice, stock, images } = productdata
@@ -27,11 +29,29 @@ const createProduct = async (productdata, sellerId) => {
     return product
 }
 
-const getAllProducts = async () => {
-    const products = await ProductModel.find({ isActive: true })
-        .populate("seller", "name")
-        .populate("category", "name")
-    return products
+const getAllProducts = async (query) => {
+    const { page, limit, skip } = getPagination(query);
+    const { filter, sortOption } = buildProductQuery(query)
+    const [products, totalItems] = await Promise.all([
+        ProductModel.find(filter)
+            .select(
+                "name mrp sellingPrice averageRating totalReviews stock images category"
+            )
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limit)
+            .populate("seller", "name")
+            .populate("category", "name")
+            .lean(),
+        ProductModel.countDocuments(filter)
+    ])
+    const pagination = buildPagination(
+        page, limit, totalItems
+    )
+    return {
+        products,
+        pagination
+    }
 }
 
 const getProductByid = async (id) => {
@@ -126,7 +146,7 @@ const toggleProductActive = async (productId, seller) => {
             throw new ApiError(403, "you are not allowed to update this product");
         }
     }
-    
+
     product.isActive = !product.isActive;
     await product.save();
     return product;

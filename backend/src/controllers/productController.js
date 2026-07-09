@@ -10,11 +10,11 @@ const createProduct = async (req, res) => {
 }
 
 const getAllProducts = async (req, res) => {
-    const products = await productService.getAllProducts()
+    const result = await productService.getAllProducts(req.query)
     return res.status(200).json({
         success: true,
         message: "products fetched succesfully",
-        data: { products },
+        data: result,
     })
 }
 const getProductByid = async (req, res) => {

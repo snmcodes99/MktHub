@@ -13,19 +13,40 @@ export default function ProductListingPage() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get("search") || ""
   const [page, setPage] = useState(1)
+  const [selectedCategories, setSelectedCategories] = useState([])
+  const [minPrice, setMinPrice] = useState("")
+  const [maxPrice, setMaxPrice] = useState("")
+  const [sort, setSort] = useState("")
 
-  // Reset page when search changes
+  // Reset page when search or filters change
   useEffect(() => {
     setPage(1)
-  }, [searchQuery])
+  }, [searchQuery, selectedCategories, minPrice, maxPrice, sort])
+
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    )
+  }
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", { search: searchQuery, page }],
-    queryFn: () => getProducts({ search: searchQuery, page, limit: 12 }),
+    queryKey: ["products", { search: searchQuery, page, selectedCategories, minPrice, maxPrice, sort }],
+    queryFn: () => getProducts({ 
+        search: searchQuery, 
+        page, 
+        limit: 12,
+        category: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
+        minPrice: minPrice || undefined,
+        maxPrice: maxPrice || undefined,
+        sort: sort || undefined
+    }),
   })
 
-  const products = data?.data?.data?.products || []
-  const totalPages = data?.data?.data?.pagination?.pages || 1
+  const resultData = data?.data?.data || {}
+  const products = resultData.products || []
+  const totalPages = resultData.pagination?.totalPages || 1
 
   const { data: categoryData, isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
@@ -58,7 +79,13 @@ export default function ProductListingPage() {
                   ) : (
                     categories.map((category) => (
                       <label key={category._id} className="flex items-center gap-2 hover:text-foreground cursor-pointer">
-                        <input type="checkbox" className="rounded border-input text-primary focus:ring-primary" value={category._id} /> {category.name}
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-input text-primary focus:ring-primary" 
+                          value={category._id} 
+                          checked={selectedCategories.includes(category._id)}
+                          onChange={() => handleCategoryChange(category._id)}
+                        /> {category.name}
                       </label>
                     ))
                   )}
@@ -67,9 +94,9 @@ export default function ProductListingPage() {
               <div className="border-t pt-4">
                 <h4 className="mb-2 font-medium">Price Range</h4>
                 <div className="flex items-center gap-2">
-                  <Input type="number" placeholder="Min" className="h-8" />
+                  <Input type="number" placeholder="Min" className="h-8" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
                   <span>-</span>
-                  <Input type="number" placeholder="Max" className="h-8" />
+                  <Input type="number" placeholder="Max" className="h-8" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
                 </div>
               </div>
             </div>
@@ -83,7 +110,18 @@ export default function ProductListingPage() {
               {searchQuery ? `Search Results for "${searchQuery}"` : "All Products"}
             </h1>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <select 
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                value={sort}
+                onChange={e => setSort(e.target.value)}
+              >
+                <option value="">Sort By</option>
+                <option value="-createdAt">Newest First</option>
+                <option value="createdAt">Oldest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+              </select>
               <Button variant="outline" size="icon" className="md:hidden">
                 <Filter className="h-4 w-4" />
               </Button>

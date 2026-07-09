@@ -84,15 +84,15 @@ export default function ProductDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6">
-      <div className="grid gap-12 lg:grid-cols-2">
+      <div className="grid gap-8 lg:gap-12 lg:grid-cols-12 items-start">
         {/* Product Images */}
-        <div className="flex flex-col gap-4">
-          <div className="relative aspect-square overflow-hidden rounded-2xl border bg-muted">
+        <div className="flex flex-col gap-4 lg:col-span-5 w-full max-w-xl mx-auto sticky top-24">
+          <div className="relative aspect-[4/3] md:aspect-square overflow-hidden rounded-2xl border bg-muted shadow-sm">
             {product.images && product.images.length > 0 ? (
               <img
                 src={product.images[activeImage]}
                 alt={product.name}
-                className="h-full w-full object-cover transition-all duration-300"
+                className="h-full w-full object-cover transition-all duration-500 hover:scale-105"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -107,13 +107,13 @@ export default function ProductDetailPage() {
           </div>
           
           {product.images && product.images.length > 1 && (
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveImage(index)}
-                  className={`relative aspect-square w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
-                    activeImage === index ? "border-primary shadow-sm" : "border-transparent opacity-70 hover:opacity-100"
+                  className={`relative aspect-square w-20 sm:w-24 shrink-0 snap-start overflow-hidden rounded-xl border-2 transition-all ${
+                    activeImage === index ? "border-primary shadow-md ring-2 ring-primary/20 ring-offset-2" : "border-transparent opacity-60 hover:opacity-100"
                   }`}
                 >
                   <img src={image} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
@@ -124,7 +124,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-col">
+        <div className="flex flex-col lg:col-span-7 py-2">
           <div className="mb-2 text-sm font-medium text-primary">
             {product.category?.name || "Uncategorized"}
           </div>

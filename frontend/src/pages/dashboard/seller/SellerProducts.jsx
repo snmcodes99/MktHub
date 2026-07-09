@@ -43,7 +43,7 @@ export default function SellerProducts() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["products"],
-    queryFn: () => getProducts(),
+    queryFn: () => getProducts({ limit: 100 }),
   })
 
   const { data: categoryData } = useQuery({

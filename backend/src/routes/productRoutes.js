@@ -8,12 +8,12 @@ const validate=require("../middleware/validation/validate");
 
 const productController=require("../controllers/productController");
 
-const { createProductValidation, updateProductValidation } = require("../middleware/validation/productValidation");
+const { getProductsValidation,createProductValidation, updateProductValidation } = require("../middleware/validation/productValidation");
 const { mongoIdValidation } = require("../middleware/validation/commonValidation");
 
 const router=express.Router();
 
-router.get("/",productController.getAllProducts)
+router.get("/",getProductsValidation,validate,productController.getAllProducts)
 router.get("/:id", mongoIdValidation("id"),validate,productController.getProductByid)
 
 router.post("/",
