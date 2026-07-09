@@ -3,26 +3,38 @@ const ProductModel = require("../../models/Product")
 const CartModel = require("../../models/Cart")
 const AddressModel = require("../../models/Address")
 const ApiError = require("../../utils/ApiErrors")
-const {reduceStock,
-    restoreStock,
-    createOrder,
-    getOrderItems,
-    getShippingAddress,
-    clearCart,
-    validateProducts,
-    generateOrderNumber}=require("./orderHelper")
+const mongoose = require("mongoose")
+const { getPagination, buildPagination } = require("../../utils/pagination.utils")
+const { buildOrderQuery } = require("../../utils/orderQuery.util")
+const { reduceStock, restoreStock, createOrder, getOrderItems, getShippingAddress, clearCart, validateProducts, generateOrderNumber } = require("./orderHelper")
 
 const placeOrder = async (orderData, userData) => {
     const orderItems = await getOrderItems(orderData, userData)
     const address = await getShippingAddress(orderData.addressId, userData)
     const { orderProductSnapshot, totalPrice } = await validateProducts(orderItems)
     const orderNumber = generateOrderNumber()
-    const newOrder = await createOrder(orderNumber, userData, address, orderProductSnapshot, totalPrice, orderData.paymentMethod)
-    if (orderData.paymentMethod === "COD") {
-        await reduceStock(orderProductSnapshot)
-        await clearCart(userData)
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+    try {
+        if (orderData.paymentMethod === "COD") {
+            await reduceStock(orderProductSnapshot, session)
+        }
+
+        const newOrder = await createOrder(orderNumber, userData, address, orderProductSnapshot, totalPrice, orderData.paymentMethod, session)
+
+        if (orderData.paymentMethod === "COD") {
+            await clearCart(userData, session)
+        }
+
+        await session.commitTransaction()
+        return newOrder
+    } catch (error) {
+        await session.abortTransaction()
+        throw error
+    } finally {
+        session.endSession()
     }
-    return newOrder
 }
 
 const getMyOrders = async (userData) => {
@@ -59,14 +71,25 @@ const cancelOrder = async (orderId, userData) => {
     if (["SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].includes(order.orderStatus)) {
         throw new ApiError(400, "Order cannot be cancelled")
     }
-    order.orderStatus = "CANCELLED"
-    if (order.paymentMethod === "COD") {
-        await restoreStock(order.items)
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+    try {
+        if (order.paymentMethod === "COD") {
+            await restoreStock(order.items, session)
+        }
+        
+        order.orderStatus = "CANCELLED"
+        await order.save({ session })
+
+        await session.commitTransaction()
+        return order
+    } catch (error) {
+        await session.abortTransaction()
+        throw error
+    } finally {
+        session.endSession()
     }
-    await order.save()
-
-    return order
-
 }
 
 const returnOrder = async (orderId, userData) => {
@@ -90,12 +113,27 @@ const returnOrder = async (orderId, userData) => {
     return order
 }
 
-const getAllOrders = async () => {
-    const orders = await OrderModel.find()
-        .sort({
-            createdAt: -1
-        }).populate("user", "name email")
-    return orders
+const getAllOrders = async (query) => {
+    const { page, limit, skip } = getPagination(query);
+    const { filter, sortOption } = buildOrderQuery(query);
+
+    const [orders, totalItems] = await Promise.all([
+        OrderModel.find(filter)
+            .select("orderNumber totalPrice paymentStatus orderStatus paymentMethod createdAt items")
+            .populate("user", "name email")
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        OrderModel.countDocuments(filter)
+    ]);
+
+    const pagination = buildPagination(page, limit, totalItems);
+
+    return {
+        orders,
+        pagination
+    };
 }
 const validTransitions = {
     PENDING: [
@@ -145,15 +183,16 @@ const updateOrderStatus = async (orderId, status) => {
     return order
 }
 
-const mongoose = require("mongoose")
-
-const getSellerOrders = async (sellerId) => {
+const getSellerOrders = async (sellerId, query = {}) => {
     const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
-    
+
     const sellerProducts = await ProductModel.find({ seller: sellerObjectId }).select('_id');
     const sellerProductIds = sellerProducts.map(p => p._id);
 
-    return await OrderModel.aggregate([
+    const { page, limit, skip } = getPagination(query);
+    const { filter, sortOption } = buildOrderQuery(query);
+
+    const pipeline = [
         { $match: { "items.product": { $in: sellerProductIds } } },
         { $unwind: "$items" },
         { $match: { "items.product": { $in: sellerProductIds } } },
@@ -162,12 +201,19 @@ const getSellerOrders = async (sellerId) => {
                 _id: "$_id",
                 orderNumber: { $first: "$orderNumber" },
                 orderStatus: { $first: "$orderStatus" },
+                paymentStatus: { $first: "$paymentStatus" },
+                paymentMethod: { $first: "$paymentMethod" },
                 createdAt: { $first: "$createdAt" },
                 user: { $first: "$user" },
                 totalPrice: { $sum: { $multiply: ["$items.sellingPrice", "$items.quantity"] } },
                 items: { $push: "$items" }
             }
-        },
+        }
+    ];
+    if (Object.keys(filter).length > 0) {
+        pipeline.push({ $match: filter });
+    }
+    pipeline.push(
         {
             $lookup: {
                 from: "users",
@@ -183,8 +229,30 @@ const getSellerOrders = async (sellerId) => {
             }
         },
         { $project: { customer: 0, user: 0 } },
-        { $sort: { createdAt: -1 } }
-    ]);
+        {
+            $facet: {
+                data: [
+                    { $sort: sortOption },
+                    { $skip: skip },
+                    { $limit: limit }
+                ],
+                metadata: [
+                    { $count: "total" }
+                ]
+            }
+        }
+    );
+
+    const result = await OrderModel.aggregate(pipeline);
+    const orders = result[0].data;
+    const totalItems = result[0].metadata[0]?.total || 0;
+
+    const pagination = buildPagination(page, limit, totalItems);
+
+    return {
+        orders,
+        pagination
+    };
 }
 
 module.exports = {

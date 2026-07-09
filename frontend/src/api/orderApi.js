@@ -10,8 +10,8 @@ export const cancelOrder = (id) => axiosClient.patch(`/order/${id}/cancel`)
 
 export const returnOrder = (id) => axiosClient.patch(`/order/${id}/return`)
 
-export const getAllOrders = () => axiosClient.get("/order")
+export const getAllOrders = (params) => axiosClient.get("/order", { params })
 
 export const updateOrderStatus = (id, data) => axiosClient.patch(`/order/${id}/status`, data)
 
-export const getSellerOrders = () => axiosClient.get("/order/seller/orders")
+export const getSellerOrders = (params) => axiosClient.get("/order/seller/orders", { params })

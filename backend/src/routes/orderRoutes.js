@@ -8,7 +8,7 @@ const authorize = require("../middleware/auth/authorize")
 const validate = require("../middleware/validation/validate")
 const validateAllowedFields = require("../middleware/validation/validateAllowedField")
 
-const { placeOrderValidation, updateOrderStatusValidation } = require("../middleware/validation/orderValidation")
+const { placeOrderValidation, updateOrderStatusValidation, getOrdersValidation } = require("../middleware/validation/orderValidation")
 
 const {mongoIdValidation} = require("../middleware/validation/commonValidation")
 
@@ -57,12 +57,16 @@ router.patch("/:id/return",
 router.get("/",
     authMiddleware,
     authorize("ADMIN"),
+    getOrdersValidation,
+    validate,
     orderController.getAllOrders
 )
 
 router.get("/seller/orders",
     authMiddleware,
     authorize("SELLER", "ADMIN"),
+    getOrdersValidation,
+    validate,
     orderController.getSellerOrders
 )
 

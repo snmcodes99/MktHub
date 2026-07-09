@@ -33,7 +33,7 @@ const getShippingAddress = async (addressId, userData) => {
     return address
 }
 
-const clearCart = async (userData) => {
+const clearCart = async (userData, session = null) => {
     await CartModel.findOneAndUpdate(
         {
             user: userData._id
@@ -41,7 +41,8 @@ const clearCart = async (userData) => {
         {
             items: [],
             totalPrice: 0
-        }
+        },
+        { session }
     )
 }
 const validateProducts = async (orderItems) => {
@@ -77,8 +78,8 @@ const validateProducts = async (orderItems) => {
         totalPrice
     }
 }
-const createOrder = async (orderNumber, userData, address, orderProductSnapshot, totalPrice, paymentMethod) => {
-    const newOrder = await OrderModel.create({
+const createOrder = async (orderNumber, userData, address, orderProductSnapshot, totalPrice, paymentMethod, session = null) => {
+    const [newOrder] = await OrderModel.create([{
         orderNumber,
         user: userData._id,
         items: orderProductSnapshot,
@@ -96,15 +97,15 @@ const createOrder = async (orderNumber, userData, address, orderProductSnapshot,
         paymentMethod,
         paymentStatus: "PENDING",
         orderStatus: paymentMethod === "COD" ? "PLACED" : "PENDING"
-    })
+    }], { session })
     return newOrder
 }
 const generateOrderNumber = () => {
     return `ORD-${Date.now()}`
 }
-const restoreStock = async (orderItems) => {
+const restoreStock = async (orderItems, session = null) => {
     for (const item of orderItems) {
-        await ProductModel.updateOne(
+        await ProductModel.findOneAndUpdate(
             {
                 _id: item.product
             },
@@ -112,22 +113,28 @@ const restoreStock = async (orderItems) => {
                 $inc: {
                     stock: item.quantity
                 }
-            }
+            },
+            { session }
         )
     }
 }
-const reduceStock = async (orderItems) => {
+const reduceStock = async (orderItems, session = null) => {
     for (const item of orderItems) {
-        await ProductModel.updateOne(
+        const product = await ProductModel.findOneAndUpdate(
             {
-                _id: item.product
+                _id: item.product,
+                stock: { $gte: item.quantity }
             },
             {
                 $inc: {
                     stock: -item.quantity
                 }
-            }
+            },
+            { session, new: true }
         )
+        if (!product) {
+            throw new ApiError(400, "Insufficient stock")
+        }
     }
 }
 

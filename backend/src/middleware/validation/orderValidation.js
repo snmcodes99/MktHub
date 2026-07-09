@@ -1,4 +1,4 @@
-const { body } = require("express-validator")
+const { body, query } = require("express-validator")
 
 const placeOrderValidation = [
 
@@ -46,7 +46,60 @@ const updateOrderStatusValidation = [
         .withMessage("Invalid order status")
 ]
 
+const getOrdersValidation = [
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer"),
+    query("limit")
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Limit must be between 1 and 100"),
+    query("orderStatus")
+        .optional()
+        .isIn([
+            "PENDING",
+            "PLACED",
+            "PROCESSING",
+            "SHIPPED",
+            "OUT_FOR_DELIVERY",
+            "DELIVERED",
+            "CANCELLED",
+            "RETURNED"
+        ])
+        .withMessage("Invalid order status"),
+    query("paymentStatus")
+        .optional()
+        .isIn(["PENDING", "PAID", "FAILED"])
+        .withMessage("Invalid payment status"),
+    query("minAmount")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Minimum amount must be a positive number"),
+    query("maxAmount")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Maximum amount must be a positive number"),
+    query("orderNumber")
+        .optional()
+        .trim()
+        .isLength({ max: 50 })
+        .withMessage("Order number search cannot exceed 50 characters"),
+    query("sort")
+        .optional()
+        .isIn([
+            "newest",
+            "oldest",
+            "-createdAt",
+            "createdAt",
+            "amount_asc",
+            "amount_desc"
+        ])
+        .withMessage("Invalid sort option")
+]
+
 module.exports = {
     placeOrderValidation,
-    updateOrderStatusValidation
+    updateOrderStatusValidation,
+    getOrdersValidation
 }

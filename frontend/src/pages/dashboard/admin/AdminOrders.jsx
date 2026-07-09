@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Package, Loader2, Search, ChevronDown } from "lucide-react"
 import { getAllOrders, updateOrderStatus } from "@/api/orderApi"
@@ -33,11 +33,21 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("ALL")
   const [statusDropdownId, setStatusDropdownId] = useState(null)
+  const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
 
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, statusFilter])
+
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-orders"],
-    queryFn: getAllOrders,
+    queryKey: ["admin-orders", { page, searchTerm, statusFilter }],
+    queryFn: () => getAllOrders({ 
+      page,
+      limit: 10,
+      orderNumber: searchTerm || undefined,
+      orderStatus: statusFilter !== "ALL" ? statusFilter : undefined
+    }),
   })
 
   const updateStatusMutation = useMutation({
@@ -52,27 +62,9 @@ export default function AdminOrders() {
     }
   })
 
-  const orders = data?.data?.data?.orders || data?.data?.data || []
-
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      (order._id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "ALL" || 
-      order.orderStatus === statusFilter || 
-      (statusFilter === "PENDING" && order.orderStatus === "PLACED")
-    return matchesSearch && matchesStatus
-  })
-
-  const statusCounts = {
-    ALL: orders.length,
-    PENDING: orders.filter(o => o.orderStatus === "PENDING" || o.orderStatus === "PLACED").length,
-    PROCESSING: orders.filter(o => o.orderStatus === "PROCESSING").length,
-    SHIPPED: orders.filter(o => o.orderStatus === "SHIPPED").length,
-    DELIVERED: orders.filter(o => o.orderStatus === "DELIVERED").length,
-    CANCELLED: orders.filter(o => o.orderStatus === "CANCELLED").length,
-  }
+  const resultData = data?.data?.data || {}
+  const orders = resultData.orders || (Array.isArray(resultData) ? resultData : [])
+  const totalPages = resultData.pagination?.totalPages || 1
 
   if (isLoading) {
     return (
@@ -114,16 +106,13 @@ export default function AdminOrders() {
             }`}
           >
             {key === "ALL" ? "All Orders" : key.charAt(0) + key.slice(1).toLowerCase()}
-            <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${statusFilter === key ? "bg-white/20" : "bg-muted"}`}>
-              {statusCounts[key]}
-            </span>
           </button>
         ))}
       </div>
 
       <Card>
         <CardContent className="p-0">
-          {filteredOrders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center text-center border-dashed">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Package className="h-8 w-8 text-muted-foreground" />
@@ -145,7 +134,7 @@ export default function AdminOrders() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {orders.map((order) => (
                   <TableRow key={order._id}>
                     <TableCell className="font-mono text-xs text-muted-foreground">
                       #{order._id?.slice(-8).toUpperCase()}
@@ -196,6 +185,31 @@ export default function AdminOrders() {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 p-4 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <div className="text-sm font-medium">
+                Page {page} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

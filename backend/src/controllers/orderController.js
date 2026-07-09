@@ -48,11 +48,11 @@ const returnOrder=async(req,res)=>{
 }
 
 const getAllOrders=async(req,res)=>{
-    const orders=await orderService.getAllOrders()
+    const result=await orderService.getAllOrders(req.query)
     res.status(200).json({
         success:true,
         message:"Orders fetched successfully",
-        data:orders
+        data:result
     })
 }
 
@@ -67,11 +67,11 @@ const updateOrderStatus=async(req,res)=>{
 
 const getSellerOrders = async(req, res) => {
     // This calls the service which we will add next
-    const orders = await orderService.getSellerOrders(req.user._id)
+    const result = await orderService.getSellerOrders(req.user._id, req.query)
     res.status(200).json({
         success: true,
         message: "Seller orders fetched successfully",
-        data: orders
+        data: result
     })
 }
 

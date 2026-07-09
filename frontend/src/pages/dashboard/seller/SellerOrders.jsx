@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Package, Loader2, Search } from "lucide-react"
 import { getSellerOrders, updateOrderStatus } from "@/api/orderApi"
@@ -19,11 +19,21 @@ import { toast } from "sonner"
 export default function SellerOrders() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("ALL")
+  const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
 
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, statusFilter])
+
   const { data, isLoading } = useQuery({
-    queryKey: ["seller-orders"],
-    queryFn: getSellerOrders,
+    queryKey: ["seller-orders", { page, searchTerm, statusFilter }],
+    queryFn: () => getSellerOrders({ 
+      page,
+      limit: 10,
+      orderNumber: searchTerm || undefined,
+      orderStatus: statusFilter !== "ALL" ? statusFilter : undefined
+    }),
   })
 
   const updateStatusMutation = useMutation({
@@ -37,17 +47,9 @@ export default function SellerOrders() {
     }
   })
 
-  const orders = data?.data?.data || []
-  
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          order.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (order.customerName || "").toLowerCase().includes(searchTerm.toLowerCase())
-    
-    if (statusFilter === "ALL") return matchesSearch
-    return matchesSearch && order.orderStatus === statusFilter
-  })
-
+  const resultData = data?.data?.data || {}
+  const orders = resultData.orders || (Array.isArray(resultData) ? resultData : [])
+  const totalPages = resultData.pagination?.totalPages || 1
   const filterTabs = [
     { id: "ALL", label: "All Orders" },
     { id: "PENDING", label: "Pending" },
@@ -110,7 +112,7 @@ export default function SellerOrders() {
 
       <Card>
         <CardContent className="p-0">
-          {filteredOrders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center text-center">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Package className="h-8 w-8 text-muted-foreground" />
@@ -131,7 +133,7 @@ export default function SellerOrders() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => {
+                {orders.map((order) => {
                   const statusColor = ORDER_STATUSES[order.orderStatus]?.color || "secondary"
                   const availableStatuses = getAvailableStatuses(order.orderStatus)
                   
@@ -180,6 +182,29 @@ export default function SellerOrders() {
                 })}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 p-4 border-t">
+              <button
+                className="px-3 py-1 text-sm font-medium border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </button>
+              <div className="text-sm font-medium">
+                Page {page} of {totalPages}
+              </div>
+              <button
+                className="px-3 py-1 text-sm font-medium border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                Next
+              </button>
+            </div>
           )}
         </CardContent>
       </Card>
