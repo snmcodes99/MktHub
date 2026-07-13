@@ -1,28 +1,28 @@
-const express=require("express")
-const paymentController=require("../controllers/paymentController")
-const authMiddleware=require("../middleware/auth/authMiddleware")
-const validateAllowedFields=require("../middleware/validation/validateAllowedField")
-const {processPaymentValidation}=require("../middleware/validation/paymentValidation")
-const {mongoIdValidation}=require("../middleware/validation/commonValidation")
-const validate=require("../middleware/validation/validate")
-const router=express.Router()
+const express = require("express")
 
-router.post("/checkout",
+const paymentController = require("../controllers/paymentController")
+const authMiddleware = require("../middleware/auth/authMiddleware")
+const validateAllowedFields = require("../middleware/validation/validateAllowedField")
+const validate = require("../middleware/validation/validate")
+const { createPaymentValidation } = require("../middleware/validation/paymentValidation")
+
+const router = express.Router()
+
+router.post(
+    "/create",
     authMiddleware,
     validateAllowedFields([
-        "orderId",
-        "status"
+        "source",
+        "productId",
+        "quantity",
+        "addressId"
     ]),
-    processPaymentValidation,
+
+    createPaymentValidation,
+
     validate,
-    paymentController.processPayment
+
+    paymentController.createPayment
 )
 
-router.get("/status/:orderId",
-    authMiddleware,
-    mongoIdValidation("orderId"),
-    validate,
-    paymentController.getPaymentStatus
-)
-
-module.exports=router
+module.exports = router

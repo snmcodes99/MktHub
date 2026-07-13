@@ -15,6 +15,20 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -79,7 +93,6 @@ export default function CheckoutPage() {
     try {
       const payload = {
         addressId: selectedAddress,
-        paymentMethod: paymentMethod === "CARD" ? "ONLINE" : "COD",
         source: isBuyNow ? "BUY_NOW" : "CART"
       }
       
@@ -88,34 +101,66 @@ export default function CheckoutPage() {
         payload.quantity = buyNowQuantity
       }
 
-      // 1. Place order
-      const orderRes = await placeOrder(payload)
-      
-      const orderId = orderRes.data.data._id
-
-      // 2. Process payment
-      if (paymentMethod === "CARD") {
-        toast.info("Processing payment via secure gateway...")
-        const res = await processPayment({ orderId })
-        if (res.data && res.data.success) {
-          toast.success("Payment successful! Order placed.")
-        } else {
-          // If the payment simulated failure
-          throw new Error(res.data?.message || "Payment declined by the bank")
-        }
-      } else {
+      if (paymentMethod === "COD") {
+        payload.paymentMethod = "COD"
+        // 1. Place order
+        await placeOrder(payload)
         toast.success("Order placed successfully with Cash on Delivery.")
+        
+        // 3. Clear cart cache and redirect
+        if (!isBuyNow) {
+          queryClient.invalidateQueries({ queryKey: ["cart"] })
+        }
+        queryClient.invalidateQueries({ queryKey: ["my-orders"] })
+        navigate("/dashboard") // or order success page
+      } else if (paymentMethod === "CARD") {
+        toast.info("Initializing payment gateway...")
+        
+        const isLoaded = await loadRazorpayScript()
+        if (!isLoaded) {
+          throw new Error("Razorpay SDK failed to load. Are you online?")
+        }
+
+        const res = await processPayment(payload)
+        if (!res.data || !res.data.success) {
+          throw new Error(res.data?.message || "Failed to initialize payment")
+        }
+
+        const checkoutData = res.data.data
+        
+        const options = {
+          key: checkoutData.keyId,
+          amount: checkoutData.amount,
+          currency: checkoutData.currency,
+          name: "MarketHub",
+          description: "Order Payment",
+          order_id: checkoutData.gatewayOrderId,
+          handler: function (response) {
+            toast.success("Payment successful! Order placed.")
+            if (!isBuyNow) {
+              queryClient.invalidateQueries({ queryKey: ["cart"] })
+            }
+            queryClient.invalidateQueries({ queryKey: ["my-orders"] })
+            navigate("/dashboard")
+          },
+          prefill: {
+            name: "Customer",
+            email: "customer@example.com"
+          },
+          theme: {
+            color: "#0f172a"
+          }
+        }
+        
+        const paymentObject = new window.Razorpay(options)
+        paymentObject.on('payment.failed', function (response) {
+            toast.error(response.error.description || "Payment failed")
+        })
+        paymentObject.open()
       }
-      
-      // 3. Clear cart cache and redirect
-      if (!isBuyNow) {
-        queryClient.invalidateQueries({ queryKey: ["cart"] })
-      }
-      queryClient.invalidateQueries({ queryKey: ["my-orders"] })
-      navigate("/dashboard") // or order success page
       
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to process checkout")
+      toast.error(error.response?.data?.message || error.message || "Failed to process checkout")
     } finally {
       setIsProcessing(false)
     }
@@ -210,8 +255,8 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-3">
                   <CreditCard className="h-6 w-6 text-primary" />
                   <div>
-                    <div className="font-semibold">Credit/Debit Card</div>
-                    <div className="text-xs text-muted-foreground">Mock secure payment</div>
+                    <div className="font-semibold">Credit/Debit Card / UPI</div>
+                    <div className="text-xs text-muted-foreground">Secure online payment via Razorpay</div>
                   </div>
                 </div>
               </label>
@@ -239,28 +284,7 @@ export default function CheckoutPage() {
               </label>
             </div>
 
-            {/* Mock Card Details Form */}
-            {paymentMethod === "CARD" && (
-              <div className="mt-6 animate-fade-in rounded-xl border bg-muted/50 p-4">
-                <h3 className="mb-4 text-sm font-medium">Enter Card Details</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Card Number</Label>
-                    <Input placeholder="0000 0000 0000 0000" defaultValue="4242 4242 4242 4242" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Expiry Date</Label>
-                      <Input placeholder="MM/YY" defaultValue="12/26" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>CVV</Label>
-                      <Input placeholder="123" defaultValue="123" type="password" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
 

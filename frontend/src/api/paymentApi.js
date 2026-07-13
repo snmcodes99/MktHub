@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient"
 
-export const processPayment = (data) => axiosClient.post("/payment/checkout", data)
+export const processPayment = (data) => axiosClient.post("/payments/create", data)
 
-export const getPaymentStatus = (orderId) => axiosClient.get(`/payment/status/${orderId}`)
+export const getPaymentStatus = (orderId) => axiosClient.get(`/payments/status/${orderId}`)

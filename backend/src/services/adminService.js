@@ -127,7 +127,7 @@ const updateUserRole = async (userId, role) => {
     const user = await UserModel.findByIdAndUpdate(
         userId,
         { role },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     );
     if (!user) {
         throw new ApiError(404, "User not found");

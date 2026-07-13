@@ -30,7 +30,8 @@ const getOrderById=async(req,res)=>{
 }
 
 const cancelOrder=async(req,res)=>{
-    const order=await orderService.cancelOrder(req.params.id,req.user)
+    const reason = req.body.reason || "Cancelled by user";
+    const order=await orderService.cancelOrder(req.params.id,req.user,reason)
     res.status(200).json({
         success:true,
         message:"Order cancelled successfully",

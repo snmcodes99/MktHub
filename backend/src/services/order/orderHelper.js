@@ -62,8 +62,9 @@ const validateProducts = async (orderItems) => {
         if (!product) {
             throw new ApiError(404, "Product not found")
         }
-        if (product.stock < item.quantity) {
-            throw new ApiError(400, `${product.name} has only ${product.stock} items left`)
+        const availableStock = product.stock - product.reservedStock
+        if (availableStock < item.quantity) {
+            throw new ApiError(400, `${product.name} has only ${availableStock} items available`)
         }
         orderProductSnapshot.push({
             product: product._id,
@@ -103,45 +104,10 @@ const createOrder = async (orderNumber, userData, address, orderProductSnapshot,
 const generateOrderNumber = () => {
     return `ORD-${Date.now()}`
 }
-const restoreStock = async (orderItems, session = null) => {
-    for (const item of orderItems) {
-        await ProductModel.findOneAndUpdate(
-            {
-                _id: item.product
-            },
-            {
-                $inc: {
-                    stock: item.quantity
-                }
-            },
-            { session }
-        )
-    }
-}
-const reduceStock = async (orderItems, session = null) => {
-    for (const item of orderItems) {
-        const product = await ProductModel.findOneAndUpdate(
-            {
-                _id: item.product,
-                stock: { $gte: item.quantity }
-            },
-            {
-                $inc: {
-                    stock: -item.quantity
-                }
-            },
-            { session, new: true }
-        )
-        if (!product) {
-            throw new ApiError(400, "Insufficient stock")
-        }
-    }
-}
 
 
-module.exports={
-    reduceStock,
-    restoreStock,
+
+module.exports = {
     createOrder,
     getOrderItems,
     getShippingAddress,

@@ -6,34 +6,52 @@ const ApiError = require("../../utils/ApiErrors")
 const mongoose = require("mongoose")
 const { getPagination, buildPagination } = require("../../utils/pagination.utils")
 const { buildOrderQuery } = require("../../utils/orderQuery.util")
-const { reduceStock, restoreStock, createOrder, getOrderItems, getShippingAddress, clearCart, validateProducts, generateOrderNumber } = require("./orderHelper")
+const { createOrder, getOrderItems, getShippingAddress, clearCart, validateProducts, generateOrderNumber } = require("./orderHelper")
+const { reduceStock, restoreStock } = require("../inventoryService")
+const { cancelOrder: performCancelOrder } = require("../cancellationService")
 
 const placeOrder = async (orderData, userData) => {
+    if (orderData.paymentMethod !== "COD") {
+        throw new ApiError(
+            400,
+            "Online orders must be created through the payment flow"
+        )
+    }
+
     const orderItems = await getOrderItems(orderData, userData)
     const address = await getShippingAddress(orderData.addressId, userData)
     const { orderProductSnapshot, totalPrice } = await validateProducts(orderItems)
     const orderNumber = generateOrderNumber()
 
     const session = await mongoose.startSession()
-    session.startTransaction()
+
     try {
-        if (orderData.paymentMethod === "COD") {
-            await reduceStock(orderProductSnapshot, session)
-        }
+        session.startTransaction()
 
-        const newOrder = await createOrder(orderNumber, userData, address, orderProductSnapshot, totalPrice, orderData.paymentMethod, session)
+        await reduceStock(orderProductSnapshot, session)
 
-        if (orderData.paymentMethod === "COD") {
+        const newOrder = await createOrder(
+            orderNumber,
+            userData,
+            address,
+            orderProductSnapshot,
+            totalPrice,
+            "COD",
+            session
+        )
+
+        if (orderData.source === "CART") {
             await clearCart(userData, session)
         }
 
         await session.commitTransaction()
+
         return newOrder
     } catch (error) {
         await session.abortTransaction()
         throw error
     } finally {
-        session.endSession()
+        await session.endSession()
     }
 }
 
@@ -56,61 +74,8 @@ const getOrderById = async (orderId, userData) => {
     return order
 }
 
-
-const cancelOrder = async (orderId, userData) => {
-    const order = await OrderModel.findById(orderId)
-    if (!order) {
-        throw new ApiError(404, "Order not found")
-    }
-    if (order.user.toString() !== userData._id.toString()) {
-        throw new ApiError(403, "You are not authorized to cancel this order")
-    }
-    if (order.orderStatus === "CANCELLED") {
-        throw new ApiError(400, "Order is already cancelled")
-    }
-    if (["SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].includes(order.orderStatus)) {
-        throw new ApiError(400, "Order cannot be cancelled")
-    }
-
-    const session = await mongoose.startSession()
-    session.startTransaction()
-    try {
-        if (order.paymentMethod === "COD") {
-            await restoreStock(order.items, session)
-        }
-        
-        order.orderStatus = "CANCELLED"
-        await order.save({ session })
-
-        await session.commitTransaction()
-        return order
-    } catch (error) {
-        await session.abortTransaction()
-        throw error
-    } finally {
-        session.endSession()
-    }
-}
-
-const returnOrder = async (orderId, userData) => {
-    const order = await OrderModel.findById(orderId)
-    if (!order) {
-        throw new ApiError(404, "Order not found")
-    }
-    if (order.user.toString() !== userData._id.toString()) {
-        throw new ApiError(403, "You are not authorized to return this order")
-    }
-    if (order.orderStatus === "RETURNED") {
-        throw new ApiError(400, "Order is already returned")
-    }
-    if (order.orderStatus !== "DELIVERED") {
-        throw new ApiError(400, "Only delivered orders can be returned")
-    }
-    order.orderStatus = "RETURNED"
-    // Handle stock and refunds logic if needed here
-    await order.save()
-
-    return order
+const cancelOrder = async (orderId, userData, reason) => {
+    return await performCancelOrder(orderId, userData, reason)
 }
 
 const getAllOrders = async (query) => {
@@ -151,6 +116,7 @@ const validTransitions = {
         "DELIVERED",
         "CANCELLED"
     ],
+    CANCELLING: [],
     SHIPPED: [
         "OUT_FOR_DELIVERY",
         "DELIVERED"
@@ -166,21 +132,52 @@ const validTransitions = {
 }
 const updateOrderStatus = async (orderId, status) => {
     const order = await OrderModel.findById(orderId)
+
     if (!order) {
         throw new ApiError(404, "Order not found")
     }
+
     if (order.orderStatus === status) {
         throw new ApiError(400, "Order already has this status")
     }
-    if (!validTransitions[order.orderStatus].includes(status)) {
+
+    if (!validTransitions[order.orderStatus]?.includes(status)) {
         throw new ApiError(400, "Invalid order status transition")
     }
-    order.orderStatus = status
-    if (status === "DELIVERED" && order.paymentMethod === "COD") {
-        order.paymentStatus = "PAID"
+
+    const update = {
+        orderStatus: status
     }
-    await order.save()
-    return order
+
+    if (status === "DELIVERED") {
+        update.deliveredAt = new Date()
+
+        if (order.paymentMethod === "COD") {
+            update.paymentStatus = "PAID"
+        }
+    }
+
+    const updatedOrder = await OrderModel.findOneAndUpdate(
+        {
+            _id: orderId,
+            orderStatus: order.orderStatus
+        },
+        {
+            $set: update
+        },
+        {
+            returnDocument: "after"
+        }
+    )
+
+    if (!updatedOrder) {
+        throw new ApiError(
+            409,
+            "Order status changed during update. Please retry."
+        )
+    }
+
+    return updatedOrder
 }
 
 const getSellerOrders = async (sellerId, query = {}) => {
@@ -260,7 +257,6 @@ module.exports = {
     getMyOrders,
     getOrderById,
     cancelOrder,
-    returnOrder,
     getAllOrders,
     updateOrderStatus,
     getSellerOrders

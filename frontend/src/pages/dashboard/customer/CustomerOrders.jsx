@@ -4,12 +4,14 @@ import { Package, Loader2, XCircle } from "lucide-react"
 import { getMyOrders, cancelOrder, returnOrder } from "@/api/orderApi"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { formatPrice, formatDate } from "@/lib/utils"
 import { ORDER_STATUSES } from "@/lib/constants"
 import { toast } from "sonner"
 
 export default function CustomerOrders() {
   const [orderToCancel, setOrderToCancel] = useState(null)
+  const [cancelReason, setCancelReason] = useState("")
   const [orderToReturn, setOrderToReturn] = useState(null)
   const queryClient = useQueryClient()
 
@@ -24,6 +26,7 @@ export default function CustomerOrders() {
       toast.success("Order cancelled successfully")
       queryClient.invalidateQueries({ queryKey: ["my-orders"] })
       setOrderToCancel(null)
+      setCancelReason("")
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to cancel order")
@@ -160,24 +163,40 @@ export default function CustomerOrders() {
                 Are you sure you want to cancel this order? This action cannot be undone and your payment will be refunded.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex justify-end gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setOrderToCancel(null)}
-                disabled={cancelMutation.isPending}
-              >
-                Keep Order
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={() => {
-                  cancelMutation.mutate(orderToCancel)
-                }}
-                disabled={cancelMutation.isPending}
-              >
-                {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Yes, Cancel Order
-              </Button>
+            <CardContent className="pt-4 flex flex-col gap-4">
+              <div className="space-y-2">
+                <label htmlFor="cancel-reason" className="text-sm font-medium">Cancellation Reason (optional)</label>
+                <Textarea 
+                  id="cancel-reason"
+                  placeholder="Tell us why you are cancelling this order..."
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="resize-none"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setOrderToCancel(null)
+                    setCancelReason("")
+                  }}
+                  disabled={cancelMutation.isPending}
+                >
+                  Keep Order
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => {
+                    cancelMutation.mutate({ id: orderToCancel, reason: cancelReason })
+                  }}
+                  disabled={cancelMutation.isPending}
+                >
+                  {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Yes, Cancel Order
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

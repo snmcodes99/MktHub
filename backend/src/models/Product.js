@@ -48,6 +48,11 @@ const ProductScheme = new mongoose.Schema({
         required: true,
         min: [0, 'Stock can not be negative'],
     },
+    reservedStock: {
+        type: Number,
+        default: 0,
+        min: [0, 'Reversed stock can not be negative']
+    },
     averageRating: {
         type: Number,
         min: 0,

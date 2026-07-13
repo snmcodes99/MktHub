@@ -98,7 +98,7 @@ const updateProfile = async (userData, updateData) => {
             ...(name && { name }),
             ...(email && { email })
         },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     )
 
     if (!updatedUser) {

@@ -6,7 +6,7 @@ export const getMyOrders = () => axiosClient.get("/order/my-orders")
 
 export const getOrderById = (id) => axiosClient.get(`/order/${id}`)
 
-export const cancelOrder = (id) => axiosClient.patch(`/order/${id}/cancel`)
+export const cancelOrder = ({ id, reason }) => axiosClient.patch(`/order/${id}/cancel`, { reason })
 
 export const returnOrder = (id) => axiosClient.patch(`/order/${id}/return`)
 
