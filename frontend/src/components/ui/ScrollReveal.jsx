@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { motion, useInView, useAnimation } from "framer-motion"
 
-export function ScrollReveal({ 
-  children, 
-  className = "", 
-  delay = 0, 
-  direction = "up" 
+export function ScrollReveal({
+  children,
+  className = "",
+  delay = 0,
+  direction = "up"
 }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-50px" })
@@ -27,23 +27,21 @@ export function ScrollReveal({
       opacity: 1,
       y: 0,
       x: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-        delay: delay,
-      },
+      duration: 0.8,
+      ease: [0.16, 1, 0.3, 1],
+      delay: delay,
     },
   }
-
-  return (
-    <motion.div
-      ref={ref}
-      variants={variants}
-      initial="hidden"
-      animate={controls}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
 }
+
+return (
+  <motion.div
+    ref={ref}
+    variants={variants}
+    initial="hidden"
+    animate={controls}
+    className={className}
+  >
+    {children}
+  </motion.div>
+)

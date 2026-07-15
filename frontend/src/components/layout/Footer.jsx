@@ -56,7 +56,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 text-sm text-muted-foreground md:flex-row">
-          <p>© {new Date().getFullYear()} MarketHub. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} mkthub. All rights reserved.</p>
           <div className="flex gap-4">
             <Link to="/" className="hover:text-primary transition-colors" onClick={() => window.scrollTo(0,0)}>Privacy</Link>
             <Link to="/" className="hover:text-primary transition-colors" onClick={() => window.scrollTo(0,0)}>Terms</Link>

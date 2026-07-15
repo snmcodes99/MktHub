@@ -58,9 +58,15 @@ export function ProductCard({ product }) {
         </Link>
         
         <div className="mb-4 flex items-center gap-1">
-          <Star className="h-4 w-4 fill-primary text-primary" />
-          <span className="text-sm font-medium">{product.averageRating || "4.5"}</span>
-          <span className="text-xs text-muted-foreground">({product.totalReviews || 0} reviews)</span>
+          {product.totalReviews > 0 ? (
+            <>
+              <Star className="h-4 w-4 fill-primary text-primary" />
+              <span className="text-sm font-medium">{product.averageRating}</span>
+              <span className="text-xs text-muted-foreground">({product.totalReviews} reviews)</span>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground">No reviews yet</span>
+          )}
         </div>
         
         <div className="mt-auto flex items-end justify-between">

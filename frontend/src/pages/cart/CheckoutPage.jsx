@@ -132,7 +132,7 @@ export default function CheckoutPage() {
           key: checkoutData.keyId,
           amount: checkoutData.amount,
           currency: checkoutData.currency,
-          name: "MarketHub",
+          name: "mkthub",
           description: "Order Payment",
           order_id: checkoutData.gatewayOrderId,
           handler: function (response) {

@@ -1,5 +1,13 @@
 import { createContext, useState, useEffect, useCallback } from "react"
-import { getCurrentUser, login as loginApi, register as registerApi, logout as logoutApi } from "@/api/authApi"
+import {
+  getCurrentUser,
+  login as loginApi,
+  register as registerApi,
+  logout as logoutApi,
+  logoutAllDevices as logoutAllDevicesApi,
+  updateProfile as updateProfileApi,
+  refreshToken as refreshTokenApi,
+} from "@/api/authApi"
 
 export const AuthContext = createContext(null)
 
@@ -8,16 +16,31 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   const fetchUser = useCallback(async () => {
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("accessToken")
     if (!token) {
-      setLoading(false)
+      // No access token — try a silent refresh using the HttpOnly cookie
+      try {
+        const res = await refreshTokenApi()
+        const newAccessToken = res.data.data.accessToken
+        localStorage.setItem("accessToken", newAccessToken)
+        const userRes = await getCurrentUser()
+        setUser(userRes.data.data)
+      } catch {
+        // No valid session at all — user is logged out
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
       return
     }
+
     try {
       const res = await getCurrentUser()
       setUser(res.data.data)
     } catch {
-      localStorage.removeItem("token")
+      // Token invalid — axiosClient interceptor will attempt refresh automatically.
+      // If that also fails, it redirects to /login. We just clean up here.
+      localStorage.removeItem("accessToken")
       localStorage.removeItem("user")
       setUser(null)
     } finally {
@@ -29,20 +52,17 @@ export function AuthProvider({ children }) {
     fetchUser()
   }, [fetchUser])
 
-  const login = async (credentials) => {
-    const res = await loginApi(credentials)
-    const { token, user: userData } = res.data.data
-    localStorage.setItem("token", token)
-    localStorage.setItem("user", JSON.stringify(userData))
-    setUser(userData)
-    return userData
+  // Returns nothing — user must verify email before they can log in.
+  const register = async (data) => {
+    await registerApi(data)
+    // Backend returns { user } with no token. User must verify email first.
   }
 
-  const register = async (data) => {
-    const res = await registerApi(data)
-    const { token, user: userData } = res.data.data
-    localStorage.setItem("token", token)
-    localStorage.setItem("user", JSON.stringify(userData))
+  const login = async (credentials) => {
+    const res = await loginApi(credentials)
+    // Backend returns { accessToken, user }. refreshToken is set as HttpOnly cookie.
+    const { accessToken, user: userData } = res.data.data
+    localStorage.setItem("accessToken", accessToken)
     setUser(userData)
     return userData
   }
@@ -51,15 +71,35 @@ export function AuthProvider({ children }) {
     try {
       await logoutApi()
     } catch {
-      // Logout even if server call fails
+      // Logout locally even if the server call fails
     }
-    localStorage.removeItem("token")
+    localStorage.removeItem("accessToken")
     localStorage.removeItem("user")
     setUser(null)
   }
 
+  const logoutAll = async () => {
+    try {
+      await logoutAllDevicesApi()
+    } catch {
+      // Best-effort
+    }
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("user")
+    setUser(null)
+  }
+
+  const updateProfile = async (data) => {
+    const res = await updateProfileApi(data)
+    // Update local user state with the returned updated user
+    setUser(res.data.data)
+    return res.data.data
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, fetchUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, logoutAll, updateProfile, fetchUser }}
+    >
       {children}
     </AuthContext.Provider>
   )

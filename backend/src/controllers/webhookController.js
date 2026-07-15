@@ -1,6 +1,7 @@
 const crypto = require("crypto")
 const ApiError = require("../utils/ApiErrors")
 const paymentService = require("../services/paymentService")
+const { processSuccessfulRefund } = require("../services/refundService")
 const handleRazorpayWebhook = async (req, res, next) => {
     try {
         const signature = req.headers["x-razorpay-signature"]
@@ -26,7 +27,6 @@ const handleRazorpayWebhook = async (req, res, next) => {
             const paymentEntity = event.payload.payment.entity
             await paymentService.processSuccessfulPayment(paymentEntity)
         } else if (event.event === "refund.processed") {
-            const { processSuccessfulRefund } = require("../services/refundService")
             const refundEntity = event.payload.refund.entity
             await processSuccessfulRefund(refundEntity)
         }

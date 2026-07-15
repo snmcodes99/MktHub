@@ -12,13 +12,13 @@ const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.2 }
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 }
   }
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { type: "tween", duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
 }
 
 export default function LandingPage() {
@@ -55,13 +55,13 @@ export default function LandingPage() {
       <div className="w-full bg-slate-900 relative overflow-hidden h-[450px] md:h-[550px]">
         {/* Banner image with slow zoom animation */}
         <motion.div 
-          className="absolute inset-0"
-          initial={{ scale: 1 }}
-          animate={{ scale: 1.05 }}
-          transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+          className="absolute inset-0 origin-center"
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
         >
           <img 
-            src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop" 
+            src="/hero-bg.png" 
             alt="Shopping Vibe Banner" 
             className="w-full h-full object-cover object-center"
           />
@@ -71,33 +71,38 @@ export default function LandingPage() {
         
         <div className="relative z-10 container mx-auto px-4 md:px-8 h-full flex flex-col justify-center">
           <motion.div 
-            className="max-w-2xl text-white"
+            className="max-w-xl text-white"
             variants={containerVariants}
             initial="hidden"
             animate="show"
           >
-            <motion.span 
+            {/* Eyebrow — subtle, not shouting */}
+            <motion.p
               variants={itemVariants}
-              className="inline-block px-3 py-1 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider rounded-sm mb-6 drop-shadow-md"
+              className="text-sm font-semibold text-emerald-400 tracking-widest uppercase mb-4"
             >
-              Welcome to Brand Name
-            </motion.span>
+              mkthub — Buy. Sell. Connect.
+            </motion.p>
+
             <motion.h1 
               variants={itemVariants}
-              className="text-4xl md:text-5xl lg:text-7xl font-extrabold mb-6 leading-tight tracking-tight drop-shadow-xl text-balance"
+              className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-5 leading-[1.1] tracking-tight drop-shadow-xl"
             >
-              Your one-stop destination for everything you need.
+              The marketplace<br />
+              <span className="text-emerald-400">built for everyone.</span>
             </motion.h1>
+
             <motion.p 
               variants={itemVariants}
-              className="text-lg md:text-xl mb-10 text-gray-100 drop-shadow-lg font-medium max-w-xl text-balance"
+              className="text-base md:text-lg mb-10 text-white/70 max-w-sm leading-relaxed"
             >
-              Discover millions of products from trusted sellers. Fast delivery, secure payments, and unbeatable prices.
+              Shop from thousands of sellers. Find great deals, get fast delivery, and pay with confidence.
             </motion.p>
-            <motion.div variants={itemVariants}>
+
+            <motion.div variants={itemVariants} className="flex items-center gap-4">
               <Link to="/products">
-                <Button size="lg" className="rounded-sm font-bold h-14 px-10 text-lg shadow-lg hover:scale-105 transition-transform duration-200">
-                  Start Shopping
+                <Button size="lg" className="rounded-full font-bold h-12 px-8 text-base shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 transition-all duration-300">
+                  Shop Now
                 </Button>
               </Link>
             </motion.div>
@@ -109,10 +114,10 @@ export default function LandingPage() {
         
         {/* Trending Products Row */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="bg-white p-6 rounded shadow-sm"
         >
           <div className="flex items-center justify-between mb-6">
@@ -161,10 +166,10 @@ export default function LandingPage() {
 
         {/* New Launches Grid (Zebronics style) */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="bg-white p-6 rounded shadow-sm"
         >
           <div className="flex items-center justify-between mb-6">

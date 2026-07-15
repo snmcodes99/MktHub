@@ -1,5 +1,6 @@
 const express=require("express");
 const cors=require("cors")
+const cookieParser = require("cookie-parser")
 const authRoutes=require("./routes/authRoutes")
 const errorMiddleware=require("./middleware/error/errorMiddleware")
 const categoryRoutes=require("./routes/categoryRoutes");
@@ -20,7 +21,7 @@ app.use(cors({
 }))
 app.use("/api/webhooks", webhookRoutes)
 app.use(express.json())
-
+app.use(cookieParser())
 app.get('/',(req,res)=>{
     res.status(200).json({
         message:"hello from app"

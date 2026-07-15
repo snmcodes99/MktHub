@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { changePassword } from "@/api/authApi"
 import { toast } from "sonner"
@@ -6,40 +7,76 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User } from "lucide-react"
+import { Loader2, User, LogOut } from "lucide-react"
 
 export default function CustomerProfile() {
-  const { user } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const { user, logout, logoutAll, updateProfile } = useAuth()
+  const navigate = useNavigate()
+
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [profileName, setProfileName] = useState(user?.name ?? "")
+
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   })
 
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  const [logoutAllLoading, setLogoutAllLoading] = useState(false)
+
+  // --- Profile Update (name only — email is immutable) ---
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault()
+    setProfileLoading(true)
+    try {
+      await updateProfile({ name: profileName })
+      toast.success("Profile updated successfully!")
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to update profile")
+    } finally {
+      setProfileLoading(false)
+    }
   }
 
-  const handleSubmit = async (e) => {
+  // --- Change Password ---
+  const handlePasswordChange = (e) => {
+    setPasswordData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    if (formData.newPassword !== formData.confirmPassword) {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("New passwords do not match")
       return
     }
-
-    setIsLoading(true)
+    setPasswordLoading(true)
     try {
       await changePassword({
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
       })
-      toast.success("Password updated successfully!")
-      setFormData({ currentPassword: "", newPassword: "", confirmPassword: "" })
+      toast.success("Password changed. Please sign in again.")
+      // Backend revokes all sessions on password change — force logout
+      await logout()
+      navigate("/login")
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to update password")
     } finally {
-      setIsLoading(false)
+      setPasswordLoading(false)
+    }
+  }
+
+  // --- Logout all devices ---
+  const handleLogoutAll = async () => {
+    setLogoutAllLoading(true)
+    try {
+      await logoutAll()
+      navigate("/login")
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to logout from all devices")
+    } finally {
+      setLogoutAllLoading(false)
     }
   }
 
@@ -51,26 +88,14 @@ export default function CustomerProfile() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Profile Info */}
+        {/* Profile Info — name only, email is read-only */}
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Update your personal details here.</CardDescription>
+            <CardDescription>You can update your name. Email cannot be changed.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={async (e) => {
-              e.preventDefault()
-              setIsLoading(true)
-              try {
-                const { updateProfile } = await import("@/api/authApi")
-                await updateProfile({ name: e.target.name.value, email: e.target.email.value })
-                toast.success("Profile updated successfully! Please login again if email was changed.")
-              } catch (error) {
-                toast.error(error?.response?.data?.message || "Failed to update profile")
-              } finally {
-                setIsLoading(false)
-              }
-            }} className="space-y-4">
+            <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <User className="h-10 w-10 text-primary" />
@@ -87,24 +112,29 @@ export default function CustomerProfile() {
                 <Label htmlFor="name">Full Name</Label>
                 <Input
                   id="name"
-                  name="name"
-                  defaultValue={user?.name}
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
                   required
+                  disabled={profileLoading}
                 />
               </div>
+
+              {/* Email is immutable — shown as read-only */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
-                  defaultValue={user?.email}
-                  required
+                  value={user?.email ?? ""}
+                  readOnly
+                  disabled
+                  className="opacity-60 cursor-not-allowed"
                 />
+                <p className="text-xs text-muted-foreground">Email address cannot be changed.</p>
               </div>
-              
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+
+              <Button type="submit" disabled={profileLoading} className="w-full">
+                {profileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>
             </form>
@@ -115,10 +145,12 @@ export default function CustomerProfile() {
         <Card>
           <CardHeader>
             <CardTitle>Change Password</CardTitle>
-            <CardDescription>Update your account password to keep it secure.</CardDescription>
+            <CardDescription>
+              Changing your password will log you out of all devices.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current Password</Label>
                 <Input
@@ -126,8 +158,9 @@ export default function CustomerProfile() {
                   name="currentPassword"
                   type="password"
                   required
-                  value={formData.currentPassword}
-                  onChange={handleChange}
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  disabled={passwordLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -137,8 +170,9 @@ export default function CustomerProfile() {
                   name="newPassword"
                   type="password"
                   required
-                  value={formData.newPassword}
-                  onChange={handleChange}
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  disabled={passwordLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -148,18 +182,43 @@ export default function CustomerProfile() {
                   name="confirmPassword"
                   type="password"
                   required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  disabled={passwordLoading}
                 />
               </div>
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={passwordLoading} className="w-full">
+                {passwordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Password
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
+
+      {/* Danger Zone — Logout all devices */}
+      <Card className="border-destructive/40">
+        <CardHeader>
+          <CardTitle className="text-destructive">Security</CardTitle>
+          <CardDescription>
+            Sign out from all devices where your account is currently active.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleLogoutAll}
+            disabled={logoutAllLoading}
+          >
+            {logoutAllLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="mr-2 h-4 w-4" />
+            )}
+            Logout from all devices
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 const sellerRequestModel = require("../models/sellerRequest")
+const { getPagination, buildPagination } = require("../utils/pagination.utils")
 const UserModel = require("../models/User")
 const ApiError = require("../utils/ApiErrors")
 
@@ -28,12 +29,23 @@ const getMySellerRequests = async (userData) => {
     return sellerRequests
 }
 
-const getAllSellerRequests = async () => {
-    const sellerRequestData = await sellerRequestModel.find()
+const getAllSellerRequests = async (query = {}) => {
+    const { page, limit, skip } = getPagination(query);
+
+    const sellerRequests = await sellerRequestModel.find()
         .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .populate("user", "name email")
         .populate("reviewedBy", "name")
-    return sellerRequestData
+
+    const totalRequests = await sellerRequestModel.countDocuments();
+    const pagination = buildPagination(page, limit, totalRequests);
+
+    return {
+        sellerRequests,
+        pagination
+    }
 }
 
 const approveSellerRequest = async (requestId, adminData) => {

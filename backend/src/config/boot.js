@@ -4,6 +4,11 @@ const bcrypt=require("bcrypt");
 const boot=async()=>{
     const adminexists=await User.findOne({role:"ADMIN"})
     if(adminexists){
+        if (!adminexists.isEmailVerified) {
+            adminexists.isEmailVerified = true
+            await adminexists.save()
+            console.log("admin email verification fixed")
+        }
         console.log("admin already exist")
         return 
     }
@@ -14,7 +19,8 @@ const boot=async()=>{
         name:process.env.ADMIN_NAME,
         email:process.env.ADMIN_EMAIL,
         password:hashedpassword,
-        role:"ADMIN"
+        role:"ADMIN",
+        isEmailVerified: true
     })
     console.log("default admin created")
 }

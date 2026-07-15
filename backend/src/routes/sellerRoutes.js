@@ -10,4 +10,10 @@ router.get("/dashboard",
     sellerController.getDashboard
 );
 
+router.get("/products",
+    authMiddleware,
+    authorize("SELLER", "ADMIN"),
+    sellerController.getSellerProducts
+);
+
 module.exports = router;

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom"
+import { ReactLenis } from 'lenis/react'
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
 import { PageTransition } from "@/components/layout/PageTransition"
@@ -90,6 +91,9 @@ function DashboardLayout() {
 import LandingPage from "@/pages/LandingPage"
 import LoginPage from "@/pages/auth/LoginPage"
 import RegisterPage from "@/pages/auth/RegisterPage"
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
+import VerifyEmailPage from "@/pages/auth/VerifyEmailPage"
 import ProductListingPage from "@/pages/product/ProductListingPage"
 import ProductDetailPage from "@/pages/product/ProductDetailPage"
 import CartPage from "@/pages/cart/CartPage"
@@ -117,51 +121,56 @@ import AdminOrders from "@/pages/dashboard/admin/AdminOrders"
 
 export default function App() {
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
-        {/* Public Routes */}
-        <Route element={<Layout />}>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/products" element={<ProductListingPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/checkout" element={<CheckoutPage />} />
+    <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothTouch: false }}>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
+          {/* Public Routes */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+            <Route path="/products" element={<ProductListingPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/checkout" element={<CheckoutPage />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Dashboard Routes (Protected) */}
-        <Route element={<DashboardLayout />}>
-          <Route element={<ProtectedRoute allowedRoles={["CUSTOMER", "SELLER", "ADMIN"]} />}>
-            <Route path="/dashboard" element={<CustomerDashboard />}>
-              <Route index element={<CustomerOverview />} />
-              <Route path="profile" element={<CustomerProfile />} />
-              <Route path="orders" element={<CustomerOrders />} />
-              <Route path="addresses" element={<CustomerAddresses />} />
-              <Route path="apply-seller" element={<SellerApplication />} />
+          {/* Dashboard Routes (Protected) */}
+          <Route element={<DashboardLayout />}>
+            <Route element={<ProtectedRoute allowedRoles={["CUSTOMER", "SELLER", "ADMIN"]} />}>
+              <Route path="/dashboard" element={<CustomerDashboard />}>
+                <Route index element={<CustomerOverview />} />
+                <Route path="profile" element={<CustomerProfile />} />
+                <Route path="orders" element={<CustomerOrders />} />
+                <Route path="addresses" element={<CustomerAddresses />} />
+                <Route path="apply-seller" element={<SellerApplication />} />
+              </Route>
+            </Route>
+            <Route element={<ProtectedRoute allowedRoles={["SELLER", "ADMIN"]} />}>
+              <Route path="/seller" element={<SellerDashboard />}>
+                <Route index element={<SellerOverview />} />
+                <Route path="products" element={<SellerProducts />} />
+                <Route path="orders" element={<SellerOrders />} />
+              </Route>
+            </Route>
+            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+              <Route path="/admin" element={<AdminDashboard />}>
+                <Route index element={<AdminOverview />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="requests" element={<AdminSellerRequests />} />
+              </Route>
             </Route>
           </Route>
-          <Route element={<ProtectedRoute allowedRoles={["SELLER", "ADMIN"]} />}>
-            <Route path="/seller" element={<SellerDashboard />}>
-              <Route index element={<SellerOverview />} />
-              <Route path="products" element={<SellerProducts />} />
-              <Route path="orders" element={<SellerOrders />} />
-            </Route>
-          </Route>
-          <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-            <Route path="/admin" element={<AdminDashboard />}>
-              <Route index element={<AdminOverview />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="orders" element={<AdminOrders />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="requests" element={<AdminSellerRequests />} />
-            </Route>
-          </Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ReactLenis>
   )
 }

@@ -4,6 +4,7 @@ const orderController = require("../controllers/orderController")
 
 const authMiddleware = require("../middleware/auth/authMiddleware")
 const authorize = require("../middleware/auth/authorize")
+const ensureSellerNotBanned = require("../middleware/auth/ensureSellerNotBanned")
 
 const validate = require("../middleware/validation/validate")
 const validateAllowedFields = require("../middleware/validation/validateAllowedField")
@@ -73,6 +74,7 @@ router.get("/seller/orders",
 router.patch("/:id/status",
     authMiddleware,
     authorize("SELLER", "ADMIN"),
+    ensureSellerNotBanned,
     validateAllowedFields([
         "status"
     ]),

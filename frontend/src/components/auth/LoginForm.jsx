@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/common/Logo"
+import { VerifyEmailBanner } from "@/components/auth/VerifyEmailBanner"
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -19,11 +20,15 @@ const loginSchema = z.object({
 export function LoginForm() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [isLoading, setIsLoading] = useState(false)
+  // Track if login was blocked due to unverified email (403)
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null)
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -31,14 +36,31 @@ export function LoginForm() {
 
   const onSubmit = async (data) => {
     setIsLoading(true)
+    setUnverifiedEmail(null) // Clear previous banner on each attempt
     try {
       const user = await login(data)
       toast.success(`Welcome back, ${user.name}!`)
-      if (user.role === "ADMIN") navigate("/admin")
-      else if (user.role === "SELLER") navigate("/seller")
-      else navigate("/dashboard")
+      // Redirect to the page they were trying to visit, or role-based dashboard
+      const from = location.state?.from?.pathname
+      if (from) {
+        navigate(from, { replace: true })
+      } else if (user.role === "ADMIN") {
+        navigate("/admin")
+      } else if (user.role === "SELLER") {
+        navigate("/seller")
+      } else {
+        navigate("/dashboard")
+      }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed. Please check your credentials.")
+      const status = error.response?.status
+      const message = error.response?.data?.message
+
+      if (status === 403) {
+        // Email not verified — show the resend banner
+        setUnverifiedEmail(getValues("email"))
+      } else {
+        toast.error(message || "Login failed. Please check your credentials.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -55,6 +77,11 @@ export function LoginForm() {
           Enter your email to sign in to your account
         </p>
       </div>
+
+      {/* Show registration success message with resend button if navigated here from RegisterForm */}
+      {location.state?.registeredEmail && (
+        <VerifyEmailBanner email={location.state.registeredEmail} isSuccess={true} />
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
@@ -90,10 +117,14 @@ export function LoginForm() {
             <p className="text-sm font-medium text-destructive">{errors.password.message}</p>
           )}
         </div>
+
+        {/* 403 Unverified Email Banner */}
+        {unverifiedEmail && <VerifyEmailBanner email={unverifiedEmail} />}
+
         <Button className="w-full" type="submit" disabled={isLoading}>
           {isLoading ? (
             <span className="flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
               Signing in...
             </span>
           ) : (

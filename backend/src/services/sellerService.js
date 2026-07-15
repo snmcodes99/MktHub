@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const ProductModel = require("../models/Product");
 const OrderModel = require("../models/Order");
+const { getPagination, buildPagination } = require("../utils/pagination.utils");
 
 const getDashboardStats = async (sellerId) => {
     const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
@@ -11,15 +12,7 @@ const getDashboardStats = async (sellerId) => {
     const sellerProducts = await ProductModel.find({ seller: sellerObjectId }).select('_id');
     const sellerProductIds = sellerProducts.map(p => p._id);
 
-    const [
-        totalProducts,
-        activeProducts,
-        revenueAggregation,
-        pendingOrdersAggregation,
-        storeRatingAggregation,
-        recentProducts,
-        recentOrders
-    ] = await Promise.all([
+    const results = await Promise.all([ // Execution of all stats queries in parallel
         ProductModel.countDocuments({ seller: sellerObjectId }),
         ProductModel.countDocuments({ seller: sellerObjectId, isActive: true }),
         
@@ -103,6 +96,16 @@ const getDashboardStats = async (sellerId) => {
         ])
     ]);
 
+    const [
+        totalProducts,
+        activeProducts,
+        revenueAggregation,
+        pendingOrdersAggregation,
+        storeRatingAggregation,
+        recentProducts,
+        recentOrders
+    ] = results;
+
     const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].totalRevenue : 0;
     const ordersPending = pendingOrdersAggregation.length > 0 ? pendingOrdersAggregation[0].count : 0;
     const storeRating = storeRatingAggregation.length > 0 ? Number(storeRatingAggregation[0].storeRating.toFixed(1)) : 0;
@@ -118,6 +121,28 @@ const getDashboardStats = async (sellerId) => {
     };
 };
 
+const getSellerProducts = async (sellerId, query = {}) => {
+    const { page, limit, skip } = getPagination(query);
+
+    const filter = { seller: sellerId };
+
+    const products = await ProductModel.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("category", "name")
+        .lean();
+
+    const totalProducts = await ProductModel.countDocuments(filter);
+    const pagination = buildPagination(page, limit, totalProducts);
+
+    return {
+        products,
+        pagination
+    };
+};
+
 module.exports = {
-    getDashboardStats
+    getDashboardStats,
+    getSellerProducts
 };

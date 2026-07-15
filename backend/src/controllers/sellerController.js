@@ -14,6 +14,22 @@ const getDashboard = async (req, res, next) => {
     }
 };
 
+const getSellerProducts = async (req, res, next) => {
+    try {
+        const sellerId = req.user._id;
+        const result = await sellerService.getSellerProducts(sellerId, req.query);
+        
+        res.status(200).json({
+            success: true,
+            message: "Seller products fetched successfully",
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
-    getDashboard
+    getDashboard,
+    getSellerProducts
 };

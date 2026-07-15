@@ -2,11 +2,12 @@ const UserModel = require("../models/User")
 const ProductModel = require("../models/Product")
 const OrderModel = require("../models/Order")
 const SellerRequestModel = require("../models/sellerRequest")
+const { getPagination, buildPagination } = require("../utils/pagination.utils")
 
 const getDashboardStats = async () => {
     // OPTIMIZATION: Instead of sending 15+ separate count queries to the database,
     // we use advanced MongoDB aggregations ($group) to calculate everything in just a few passes.
-    
+
     const [
         userStatsAggregation,
         productStatsAggregation,
@@ -49,12 +50,12 @@ const getDashboardStats = async () => {
                     revenue: {
                         $sum: {
                             $cond: [
-                                { 
+                                {
                                     $and: [
                                         { $eq: ["$paymentStatus", "PAID"] },
                                         { $ne: ["$orderStatus", "CANCELLED"] },
                                         { $ne: ["$orderStatus", "RETURNED"] }
-                                    ] 
+                                    ]
                                 },
                                 "$totalPrice",
                                 0
@@ -72,12 +73,12 @@ const getDashboardStats = async () => {
     // Extract Data from Aggregations (handle empty collections gracefully)
     const userStats = userStatsAggregation[0] || { totalUsers: 0, totalCustomers: 0, totalSellers: 0, totalAdmins: 0 };
     const productStats = productStatsAggregation[0] || { totalProducts: 0, activeProducts: 0, inactiveProducts: 0 };
-    
+
     // Parse the Order group results into a flat object for the frontend
     let totalOrders = 0;
     let totalRevenue = 0;
     const orderCounts = {
-        PENDING: 0, PROCESSING: 0, SHIPPED: 0, OUT_FOR_DELIVERY: 0, DELIVERED: 0, CANCELLED: 0
+        PENDING: 0, PLACED: 0, PROCESSING: 0, SHIPPED: 0, OUT_FOR_DELIVERY: 0, DELIVERED: 0, CANCELLED: 0, RETURNED: 0, CANCELLING: 0
     };
 
     orderStatsAggregation.forEach(group => {
@@ -102,9 +103,11 @@ const getDashboardStats = async () => {
         pendingOrders: (orderCounts.PENDING || 0) + (orderCounts.PLACED || 0),
         processingOrders: orderCounts.PROCESSING || 0,
         shippedOrders: orderCounts.SHIPPED || 0,
-        outForDeliveryOrders: orderCounts.OUT_FOR_DELIVERY,
-        deliveredOrders: orderCounts.DELIVERED,
-        cancelledOrders: orderCounts.CANCELLED,
+        outForDeliveryOrders: orderCounts.OUT_FOR_DELIVERY || 0,
+        deliveredOrders: orderCounts.DELIVERED || 0,
+        cancelledOrders: orderCounts.CANCELLED || 0,
+        returnedOrders: orderCounts.RETURNED || 0,
+        cancellingOrders: orderCounts.CANCELLING || 0,
 
         totalRevenue,
         pendingSellerRequests
@@ -113,9 +116,17 @@ const getDashboardStats = async () => {
 
 const ApiError = require("../utils/ApiErrors")
 
-const getAllUsers = async () => {
-    const users = await UserModel.find().sort({ createdAt: -1 });
-    return users;
+const getAllUsers = async (query = {}) => {
+    const { page, limit, skip } = getPagination(query);
+
+    const users = await UserModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const totalUsers = await UserModel.countDocuments();
+    const pagination = buildPagination(page, limit, totalUsers);
+
+    return {
+        users,
+        pagination
+    };
 }
 
 const updateUserRole = async (userId, role) => {
@@ -124,14 +135,15 @@ const updateUserRole = async (userId, role) => {
     if (!["CUSTOMER", "SELLER"].includes(role)) {
         throw new ApiError(403, "Cannot promote users to this role");
     }
-    const user = await UserModel.findByIdAndUpdate(
-        userId,
-        { role },
-        { returnDocument: "after", runValidators: true }
-    );
+    const user = await UserModel.findById(userId);
     if (!user) {
         throw new ApiError(404, "User not found");
     }
+    if (user.role === "ADMIN") {
+        throw new ApiError(403, "Cannot change role of an administrator");
+    }
+    user.role = role;
+    await user.save();
     return user;
 }
 

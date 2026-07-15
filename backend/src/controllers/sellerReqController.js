@@ -19,11 +19,11 @@ const getMySellerRequest = async (req, res) => {
 }
 
 const getAllSellerRequests = async (req, res) => {
-    const sellerReq = await sellerRequestService.getAllSellerRequests();
+    const result = await sellerRequestService.getAllSellerRequests(req.query);
     res.status(200).json({
         success: true,
-        message: "Seller request fetched successfully",
-        data: sellerReq
+        message: "Seller requests fetched successfully",
+        data: result
     })
 }
 

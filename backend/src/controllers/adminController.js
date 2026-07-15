@@ -10,11 +10,11 @@ const getDashboardStats = async (req, res) => {
 }
 
 const getAllUsers = async (req, res) => {
-    const users = await adminService.getAllUsers()
+    const result = await adminService.getAllUsers(req.query)
     res.status(200).json({
         success: true,
         message: "Users fetched successfully",
-        data: users
+        data: result
     })
 }
 

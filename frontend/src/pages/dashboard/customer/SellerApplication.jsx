@@ -88,7 +88,7 @@ export default function SellerApplication() {
         </div>
         <h2 className="text-2xl font-bold tracking-tight text-destructive">Account Restricted</h2>
         <p className="text-muted-foreground max-w-md">
-          You have been banned from selling on MarketHub. You can no longer submit a seller application.
+          You have been banned from selling on mkthub. You can no longer submit a seller application.
         </p>
       </div>
     )
@@ -165,7 +165,7 @@ export default function SellerApplication() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Become a Seller</h2>
         <p className="text-muted-foreground">
-          {isReapplying ? "Submit a new application to become a seller." : "Fill out the form below to apply for a seller account on MarketHub."}
+          {isReapplying ? "Submit a new application to become a seller." : "Fill out the form below to apply for a seller account on mkthub."}
         </p>
       </div>
       

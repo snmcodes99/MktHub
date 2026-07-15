@@ -2,6 +2,7 @@ const express = require("express");
 
 const authMiddleware=require("../middleware/auth/authMiddleware");
 const authorize=require("../middleware/auth/authorize");
+const ensureSellerNotBanned=require("../middleware/auth/ensureSellerNotBanned");
 
 const validateAllowedField=require("../middleware/validation/validateAllowedField");
 const validate=require("../middleware/validation/validate");
@@ -19,6 +20,7 @@ router.get("/:id", mongoIdValidation("id"),validate,productController.getProduct
 router.post("/",
     authMiddleware,
     authorize("SELLER","ADMIN"),
+    ensureSellerNotBanned,
     validateAllowedField([
         "name",
         "description",
@@ -37,6 +39,7 @@ router.post("/",
 router.patch("/:id",
     authMiddleware,
     authorize("SELLER", "ADMIN"),
+    ensureSellerNotBanned,
     validateAllowedField([
         "name",
         "description",
@@ -57,6 +60,7 @@ router.delete(
     "/:id",
     authMiddleware,
     authorize("SELLER", "ADMIN"),
+    ensureSellerNotBanned,
     mongoIdValidation("id"),
     validate,
     productController.deleteProduct
@@ -65,6 +69,7 @@ router.delete(
 router.patch("/:id/toggle-active",
     authMiddleware,
     authorize("SELLER", "ADMIN"),
+    ensureSellerNotBanned,
     mongoIdValidation("id"),
     validate,
     productController.toggleProductActive

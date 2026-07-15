@@ -217,7 +217,7 @@ export default function CartPage() {
           </Link>
           
           <p className="mt-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-            <Shield className="h-3 w-3" /> Secure checkout powered by MarketHub
+            <Shield className="h-3 w-3" /> Secure checkout powered by mkthub
           </p>
         </div>
       </div>
