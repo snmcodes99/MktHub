@@ -4,6 +4,7 @@ const authMiddleware = require("../middleware/auth/authMiddleware")
 
 const validateAllowedField = require("../middleware/validation/validateAllowedField")
 const validate = require("../middleware/validation/validate")
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter")
 
 const addressController = require("../controllers/addressController")
 
@@ -13,6 +14,7 @@ const { mongoIdValidation } = require("../middleware/validation/commonValidation
 const router = express.Router()
 
 router.post("/",
+    createRateLimiter(15 * 60 * 1000, 20, "Too many address creation attempts. Please try again after 15 minutes."),
     authMiddleware,
     validateAllowedField([
         "name",
@@ -36,6 +38,7 @@ router.get("/",
 )
 
 router.patch("/:id",
+    createRateLimiter(15 * 60 * 1000, 30, "Too many address update attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validateAllowedField([
@@ -55,12 +58,14 @@ router.patch("/:id",
     addressController.updateAddress
 )
 router.delete("/:id",
+    createRateLimiter(15 * 60 * 1000, 20, "Too many address deletion attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validate,
     addressController.deleteAddress
 )
 router.patch("/:id/default",
+    createRateLimiter(15 * 60 * 1000, 30, "Too many attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validate,

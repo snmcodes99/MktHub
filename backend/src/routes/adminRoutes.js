@@ -5,6 +5,7 @@ const authorize = require("../middleware/auth/authorize")
 const { mongoIdValidation } = require("../middleware/validation/commonValidation")
 const validateAllowedField = require("../middleware/validation/validateAllowedField")
 const validate = require("../middleware/validation/validate")
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter")
 const router = express.Router()
 
 router.get("/dashboard",
@@ -20,6 +21,7 @@ router.get("/users",
 )
 
 router.patch("/users/:id/role",
+    createRateLimiter(15 * 60 * 1000, 10, "Too many role update attempts. Please try again after 15 minutes."),
     authMiddleware,
     authorize("ADMIN"),
     mongoIdValidation("id"),
@@ -29,6 +31,7 @@ router.patch("/users/:id/role",
 )
 
 router.patch("/users/:id/ban",
+    createRateLimiter(15 * 60 * 1000, 10, "Too many ban/unban attempts. Please try again after 15 minutes."),
     authMiddleware,
     authorize("ADMIN"),
     mongoIdValidation("id"),

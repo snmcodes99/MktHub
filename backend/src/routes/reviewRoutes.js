@@ -5,9 +5,11 @@ const validateAllowedFields=require("../middleware/validation/validateAllowedFie
 const {createReviewValidation,updateReviewValidation}=require("../middleware/validation/reviewValidation")
 const {mongoIdValidation}=require("../middleware/validation/commonValidation")
 const validate=require("../middleware/validation/validate")
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter")
 const router=express.Router()
 
 router.post("/",
+    createRateLimiter(15 * 60 * 1000, 10, "Too many review creation attempts. Please try again after 15 minutes."),
     authMiddleware,
     validateAllowedFields([
         "productId",
@@ -26,6 +28,7 @@ router.get("/product/:productId",
 )
 
 router.patch("/:id",
+    createRateLimiter(15 * 60 * 1000, 20, "Too many review update attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validateAllowedFields([
@@ -38,6 +41,7 @@ router.patch("/:id",
 )
 
 router.delete("/:id",
+    createRateLimiter(15 * 60 * 1000, 20, "Too many review deletion attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validate,

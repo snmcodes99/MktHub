@@ -1,4 +1,5 @@
 import axios from "axios"
+import { toast } from "sonner"
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -43,6 +44,14 @@ axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+
+    // Handle Rate Limiting
+    if (error.response?.status === 429) {
+      toast.error("Too many requests. Please try again later.", {
+        description: error.response.data?.message || "You have exceeded the rate limit.",
+      })
+      return Promise.reject(error)
+    }
 
     // If 401 and we haven't already retried this request and it's not the refresh endpoint itself
     if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== "/auth/refresh") {

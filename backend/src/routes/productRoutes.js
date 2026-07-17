@@ -11,6 +11,7 @@ const productController=require("../controllers/productController");
 
 const { getProductsValidation,createProductValidation, updateProductValidation } = require("../middleware/validation/productValidation");
 const { mongoIdValidation } = require("../middleware/validation/commonValidation");
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter");
 
 const router=express.Router();
 
@@ -18,6 +19,7 @@ router.get("/",getProductsValidation,validate,productController.getAllProducts)
 router.get("/:id", mongoIdValidation("id"),validate,productController.getProductByid)
 
 router.post("/",
+    createRateLimiter(15 * 60 * 1000, 50, "Too many product creation attempts. Please try again after 15 minutes."),
     authMiddleware,
     authorize("SELLER","ADMIN"),
     ensureSellerNotBanned,
@@ -37,6 +39,7 @@ router.post("/",
 );
 
 router.patch("/:id",
+    createRateLimiter(15 * 60 * 1000, 50, "Too many product update attempts. Please try again after 15 minutes."),
     authMiddleware,
     authorize("SELLER", "ADMIN"),
     ensureSellerNotBanned,
@@ -58,6 +61,7 @@ router.patch("/:id",
 
 router.delete(
     "/:id",
+    createRateLimiter(15 * 60 * 1000, 50, "Too many product deletion attempts. Please try again after 15 minutes."),
     authMiddleware,
     authorize("SELLER", "ADMIN"),
     ensureSellerNotBanned,
@@ -67,6 +71,7 @@ router.delete(
 );
 
 router.patch("/:id/toggle-active",
+    createRateLimiter(15 * 60 * 1000, 30, "Too many toggle attempts. Please try again after 15 minutes."),
     authMiddleware,
     authorize("SELLER", "ADMIN"),
     ensureSellerNotBanned,

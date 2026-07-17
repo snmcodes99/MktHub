@@ -12,10 +12,12 @@ const validateAllowedFields = require("../middleware/validation/validateAllowedF
 const { placeOrderValidation, updateOrderStatusValidation, getOrdersValidation } = require("../middleware/validation/orderValidation")
 
 const {mongoIdValidation} = require("../middleware/validation/commonValidation")
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter")
 
 const router = express.Router()
 
 router.post("/",
+    createRateLimiter(15 * 60 * 1000, 10, "Too many orders placed. Please try again after 15 minutes."),
     authMiddleware,
     validateAllowedFields([
         "addressId",
@@ -42,6 +44,7 @@ router.get("/:id",
 )
 
 router.patch("/:id/cancel",
+    createRateLimiter(15 * 60 * 1000, 10, "Too many cancel attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validate,
@@ -49,6 +52,7 @@ router.patch("/:id/cancel",
 )
 
 router.patch("/:id/return",
+    createRateLimiter(15 * 60 * 1000, 10, "Too many return attempts. Please try again after 15 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validate,
@@ -72,6 +76,7 @@ router.get("/seller/orders",
 )
 
 router.patch("/:id/status",
+    createRateLimiter(15 * 60 * 1000, 100, "Too many status updates. Please try again after 15 minutes."),
     authMiddleware,
     authorize("SELLER", "ADMIN"),
     ensureSellerNotBanned,

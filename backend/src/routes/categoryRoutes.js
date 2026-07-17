@@ -9,6 +9,7 @@ const validateAllowedField=require("../middleware/validation/validateAllowedFiel
 const validate=require("../middleware/validation/validate")
 const {createCategoryValidation,updateCategoryValidation,}=require("../middleware/validation/categoryValidation");
 const { mongoIdValidation } = require("../middleware/validation/commonValidation");
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter");
 
 
 
@@ -17,6 +18,7 @@ router.get("/", categoryController.getAllCategories);
 
 router.post(
   "/",
+  createRateLimiter(15 * 60 * 1000, 20, "Too many category creation attempts. Please try again after 15 minutes."),
   authMiddleware,
   authorize("ADMIN"),
   validateAllowedField(["name"]),
@@ -27,6 +29,7 @@ router.post(
 
 router.patch(
   "/:id",
+  createRateLimiter(15 * 60 * 1000, 20, "Too many category update attempts. Please try again after 15 minutes."),
   authMiddleware,
   authorize("ADMIN"),
   mongoIdValidation("id"),
@@ -38,6 +41,7 @@ router.patch(
 
 router.delete(
   "/:id",
+  createRateLimiter(15 * 60 * 1000, 20, "Too many category deletion attempts. Please try again after 15 minutes."),
   authMiddleware,
   mongoIdValidation("id"),
   authorize("ADMIN"),

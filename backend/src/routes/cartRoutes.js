@@ -5,9 +5,11 @@ const validateAllowedFields=require("../middleware/validation/validateAllowedFie
 const {addToCartValidation,updateCartValidation}=require("../middleware/validation/cartValidation")
 const {mongoIdValidation}=require("../middleware/validation/commonValidation")
 const validate=require("../middleware/validation/validate")
+const createRateLimiter = require("../middleware/rateLimit/createRateLimiter")
 const router=express.Router()
 
 router.post("/",
+    createRateLimiter(5 * 60 * 1000, 100, "Too many add to cart attempts. Please try again after 5 minutes."),
     authMiddleware,
     validateAllowedFields([
         "productId",
@@ -24,6 +26,7 @@ router.get("/",
 )
 
 router.patch("/:id",
+    createRateLimiter(5 * 60 * 1000, 100, "Too many update cart attempts. Please try again after 5 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validateAllowedFields([
@@ -35,6 +38,7 @@ router.patch("/:id",
 )
 
 router.delete("/:id",
+    createRateLimiter(5 * 60 * 1000, 100, "Too many remove cart attempts. Please try again after 5 minutes."),
     authMiddleware,
     mongoIdValidation("id"),
     validate,
