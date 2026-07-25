@@ -4,7 +4,8 @@ const slugify = require("slugify");
 const ApiError = require("../utils/ApiErrors");
 const { getPagination, buildPagination } = require("../utils/pagination.utils");
 const { buildProductQuery } = require("../utils/productQuery.util");
-
+const { getCache, setCache, deleteCache } = require("../utils/redis.utils");
+const { buildProductListCacheKey } = require("../utils/cacheKey.util")
 const createProduct = async (productdata, sellerId) => {
     const { name, description, brand, category, mrp, sellingPrice, stock, images } = productdata
     const slug = slugify(name, {
@@ -30,6 +31,15 @@ const createProduct = async (productdata, sellerId) => {
 }
 
 const getAllProducts = async (query) => {
+    const cacheKey = buildProductListCacheKey(query)
+    const cachedProducts = await getCache(cacheKey)
+
+    if (cachedProducts) {
+        console.log("Cache Hit")
+        return cachedProducts
+    }
+
+    console.log("Cache Miss")
     const { page, limit, skip } = getPagination(query);
     const { filter, sortOption } = buildProductQuery(query)
     const [products, totalItems] = await Promise.all([
@@ -48,19 +58,43 @@ const getAllProducts = async (query) => {
     const pagination = buildPagination(
         page, limit, totalItems
     )
-    return {
-        products,
-        pagination
-    }
+const response = {
+    products,
+    pagination
+}
+
+await setCache(
+    cacheKey,
+    response,
+    120
+)
+
+return response
 }
 
 const getProductByid = async (id) => {
+    const cachedProduct = await getCache(`product:${id}`)
+
+    if (cachedProduct) {
+        console.log("Cache Hit")
+        return cachedProduct
+    }
+    console.log("Cache miss")
     const product = await ProductModel.findOne({
         _id: id,
         isActive: true
     })
         .populate("seller", "name")
         .populate("category", "name")
+        .lean()
+    if (!product) {
+        throw new ApiError(404, "product not found")
+    }
+    await setCache(
+        `product:${id}`,
+        product,
+        600
+    )
     return product
 }
 
@@ -109,6 +143,7 @@ const updateProduct = async (productId, updateData, seller) => {
     }
     Object.assign(product, updateData)
     await product.save()
+    await deleteCache(`product:${productId}`)
     return product
 }
 
@@ -130,6 +165,7 @@ const deleteProduct = async (productId, seller) => {
     }
     product.isActive = false
     await product.save()
+    await deleteCache(`product:${productId}`)
     return product
 }
 
@@ -149,6 +185,7 @@ const toggleProductActive = async (productId, seller) => {
 
     product.isActive = !product.isActive;
     await product.save();
+    await deleteCache(`product:${productId}`)
     return product;
 }
 

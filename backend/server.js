@@ -1,6 +1,8 @@
 const dotenv = require("dotenv");
 dotenv.config();
+
 const connectDB = require("./src/config/db")
+const { connectRedis } = require("./src/config/redis");
 const boot = require("./src/config/boot")
 const startScheduler = require("./src/jobs/schedular");
 
@@ -12,6 +14,7 @@ const PORT = (process.env.PORT) ? process.env.PORT : 3000;
 const startServer = async () => {
     try {
         await connectDB()
+        await connectRedis()
         await boot()
         startScheduler()
     } catch (err) {

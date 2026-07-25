@@ -172,8 +172,15 @@ export default function ProductDetailPage() {
             initial="hidden"
             animate="show"
           >
-            <motion.div variants={fadeUp} className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary w-fit tracking-wide">
-              {product.category?.name || "Premium Collection"}
+            <motion.div variants={fadeUp} className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary tracking-wide">
+                {product.category?.name || "Premium Collection"}
+              </span>
+              {product.brand && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 tracking-wide border border-slate-200">
+                  {product.brand}
+                </span>
+              )}
             </motion.div>
             
             <motion.h1 variants={fadeUp} className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl text-balance text-slate-900">
