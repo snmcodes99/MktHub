@@ -37,8 +37,20 @@ const deleteCache = async (key) => {
     }
 }
 
+const clearCachePattern = async (pattern) => {
+    try {
+        const keys = await redisClient.keys(pattern);
+        if (keys.length > 0) {
+            await redisClient.del(keys);
+        }
+    } catch (err) {
+        console.log("redis clear pattern failed")
+    }
+}
+
 module.exports = {
     getCache,
     setCache,
-    deleteCache
+    deleteCache,
+    clearCachePattern
 }

@@ -52,10 +52,12 @@ export function AuthProvider({ children }) {
     fetchUser()
   }, [fetchUser])
 
-  // Returns nothing — user must verify email before they can log in.
   const register = async (data) => {
-    await registerApi(data)
-    // Backend returns { user } with no token. User must verify email first.
+    const res = await registerApi(data)
+    const { accessToken, user: userData } = res.data.data
+    localStorage.setItem("accessToken", accessToken)
+    setUser(userData)
+    return userData
   }
 
   const login = async (credentials) => {

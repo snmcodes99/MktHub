@@ -2,9 +2,8 @@ const UserModel = require("../models/User");
 const bcrypt = require("bcrypt");
 const ApiError = require("../utils/ApiErrors");
 const SessionModel = require("../models/Session")
-const { sendEmail, sendVerificationEmail, sendPasswordResetEmail } = require("./emailService")
-
-const { generateAccessToken, generateRefreshToken, hashToken, getRefreshTokenExpiry, generateSecureToken } = require("../utils/tokenUtils")
+const { generateAccessToken, generateRefreshToken, hashToken, getRefreshTokenExpiry, generateSecureToken } = require("../utils/tokenUtils");
+const emailQueue = require("../jobs/email/emailQueue");
 
 
 const registerSerice = async (data) => {
@@ -30,7 +29,13 @@ const registerSerice = async (data) => {
     const user = await UserModel.create(userData);
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`
     try {
-        await sendVerificationEmail(user.email, verificationUrl)
+        await emailQueue.add(
+            "send-verification-email",
+            {
+                email,
+                verificationUrl
+            }
+        )
     } catch (error) {
         console.error(
             "Unable to send verification email:",
@@ -38,14 +43,25 @@ const registerSerice = async (data) => {
         )
     }
 
+    const accessToken = generateAccessToken(user._id)
+    const refreshToken = generateRefreshToken()
+    const refreshTokenHash = hashToken(refreshToken)
+    await SessionModel.create({
+        user: user._id,
+        refreshTokenHash,
+        expiresAt: getRefreshTokenExpiry()
+    })
+
     return {
         user,
+        accessToken,
+        refreshToken
     }
 };
 
 const loginService = async (data) => {
     const { email, password } = data;
-    const user = await UserModel.findOne({ email }).select("+password");
+    const user = await UserModel.findOne({ email }).select("+password +pendingEmail");
     if (!user) {
         throw new ApiError(401, "Invalid Credentials");
     }
@@ -53,9 +69,6 @@ const loginService = async (data) => {
     const isMatch = await bcrypt.compare(password, hashedpassword);
     if (!isMatch) {
         throw new ApiError(401, "Invalid Credentials");
-    }
-    if (!user.isEmailVerified) {
-        throw new ApiError(403, "Please verify your email before logging in")
     }
     const accessToken = generateAccessToken(user._id)
     const refreshToken = generateRefreshToken()
@@ -108,7 +121,7 @@ const refreshSession = async (oldRefreshToken) => {
     }
 }
 const getCurrentUser = async (userData) => {
-    const user = await UserModel.findById(userData._id)
+    const user = await UserModel.findById(userData._id).select("+pendingEmail")
     if (!user) {
         throw new ApiError(404, "User not found")
     }
@@ -142,15 +155,47 @@ const changePassword = async (userData, passwordData) => {
 }
 
 const updateProfile = async (userData, updateData) => {
-    const { name } = updateData
+    const { name, email } = updateData
+
+    let emailUpdateData = {}
+
+    if (email && email !== userData.email) {
+        const existingUser = await UserModel.findOne({ email })
+        if (existingUser && existingUser._id.toString() !== userData._id.toString()) {
+            throw new ApiError(409, "Email is already in use by another account")
+        }
+
+        const verificationToken = generateSecureToken()
+        const verificationTokenHash = hashToken(verificationToken)
+
+        emailUpdateData = {
+            pendingEmail: email,
+            emailChangeToken: verificationTokenHash,
+            emailChangeExpires: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        }
+
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email-change/${verificationToken}`
+        try {
+            await emailQueue.add(
+                "send-email-change-verification",
+                {
+                    email,
+                    verificationUrl
+                }
+            )
+        } catch (error) {
+            console.error("Unable to send email change verification email:", error.message)
+        }
+    }
 
     const updatedUser = await UserModel.findByIdAndUpdate(
         userData._id,
         {
-            ...(name && { name })
+            ...(name && { name }),
+            ...emailUpdateData
         },
         { returnDocument: "after", runValidators: true }
-    )
+    ).select("+pendingEmail")
 
     if (!updatedUser) {
         throw new ApiError(404, "User not found")
@@ -204,7 +249,13 @@ const forgotPassword = async (email) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`
 
     try {
-        await sendPasswordResetEmail(user.email, resetUrl)
+        await emailQueue.add(
+            "forgot-password",
+            {
+                email: user.email,
+                resetUrl
+            }
+        )
     }
     catch (error) {
         user.passwordResetToken = undefined
@@ -313,13 +364,91 @@ const resendVerificationEmail = async (email) => {
         return
     }
 
-    const verificationUrl =`${process.env.FRONTEND_URL}/verify-email/${verificationToken}`
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`
 
-    await sendVerificationEmail(
-        user.email,
-        verificationUrl
-    )
+    try {
+        await emailQueue.add(
+            "send-verification-email",
+            {
+                email: user.email,
+                verificationUrl
+            }
+        )
+    }
+    catch (error) {
+        throw new ApiError(
+            500,
+            "Unable to queue verification email"
+        )
+    }
 }
+const verifyEmailChange = async (rawToken) => {
+    const verificationTokenHash = hashToken(rawToken)
+    const user = await UserModel.findOne({
+        emailChangeToken: verificationTokenHash,
+        emailChangeExpires: { $gt: new Date() }
+    }).select("+pendingEmail +emailChangeToken +emailChangeExpires")
+
+    if (!user || !user.pendingEmail) {
+        throw new ApiError(400, "Invalid or expired email change token")
+    }
+
+    // Double check email is not taken by someone else right before saving
+    const existingUser = await UserModel.findOne({ email: user.pendingEmail })
+    if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+        throw new ApiError(409, "The requested email is already in use by another account")
+    }
+
+    user.email = user.pendingEmail
+    user.isEmailVerified = true
+    user.pendingEmail = undefined
+    user.emailChangeToken = undefined
+    user.emailChangeExpires = undefined
+    
+    await user.save()
+    return user
+}
+
+const resendEmailChange = async (userId) => {
+    const COOLDOWN_MS = 15 * 1000
+    const now = new Date()
+    const cooldownThreshold = new Date(Date.now() - COOLDOWN_MS)
+
+    const user = await UserModel.findById(userId).select("+pendingEmail +lastEmailChangeSentAt")
+    if (!user || !user.pendingEmail) {
+        throw new ApiError(400, "No pending email change request found")
+    }
+
+    if (user.lastEmailChangeSentAt && user.lastEmailChangeSentAt > cooldownThreshold) {
+        // Enforce cooldown quietly or explicitly (we'll just return quietly like before, or we can throw)
+        return
+    }
+
+    const verificationToken = generateSecureToken()
+    const verificationTokenHash = hashToken(verificationToken)
+
+    user.emailChangeToken = verificationTokenHash
+    user.emailChangeExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    user.lastEmailChangeSentAt = now
+
+    await user.save()
+
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email-change/${verificationToken}`
+
+    try {
+        await emailQueue.add(
+            "send-email-change-verification",
+            {
+                email: user.pendingEmail,
+                verificationUrl
+            }
+        )
+    }
+    catch (error) {
+        throw new ApiError(500, "Unable to queue email change verification email")
+    }
+}
+
 module.exports = {
     registerSerice,
     loginService,
@@ -332,5 +461,7 @@ module.exports = {
     forgotPassword,
     resetPassword,
     verifyEmail,
-    resendVerificationEmail
+    resendVerificationEmail,
+    verifyEmailChange,
+    resendEmailChange
 }

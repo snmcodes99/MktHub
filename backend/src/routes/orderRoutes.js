@@ -5,13 +5,14 @@ const orderController = require("../controllers/orderController")
 const authMiddleware = require("../middleware/auth/authMiddleware")
 const authorize = require("../middleware/auth/authorize")
 const ensureSellerNotBanned = require("../middleware/auth/ensureSellerNotBanned")
+const requireVerifiedEmail = require("../middleware/auth/requireVerifiedEmail")
 
 const validate = require("../middleware/validation/validate")
 const validateAllowedFields = require("../middleware/validation/validateAllowedField")
 
 const { placeOrderValidation, updateOrderStatusValidation, getOrdersValidation } = require("../middleware/validation/orderValidation")
 
-const {mongoIdValidation} = require("../middleware/validation/commonValidation")
+const { mongoIdValidation } = require("../middleware/validation/commonValidation")
 const createRateLimiter = require("../middleware/rateLimit/createRateLimiter")
 
 const router = express.Router()
@@ -19,6 +20,7 @@ const router = express.Router()
 router.post("/",
     createRateLimiter(15 * 60 * 1000, 10, "Too many orders placed. Please try again after 15 minutes."),
     authMiddleware,
+    requireVerifiedEmail,
     validateAllowedFields([
         "addressId",
         "paymentMethod",
@@ -88,5 +90,12 @@ router.patch("/:id/status",
     validate,
     orderController.updateOrderStatus
 )
-
+router.get(
+    "/:id/invoice",
+    createRateLimiter(15 * 60 * 1000, 30, "Too many invoice download attempts. Please try again later."),
+    authMiddleware,
+    mongoIdValidation("id"),
+    validate,
+    orderController.downloadInvoice
+);
 module.exports = router

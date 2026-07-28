@@ -1,6 +1,7 @@
 const express=require("express")
 const reviewController=require("../controllers/reviewController")
 const authMiddleware=require("../middleware/auth/authMiddleware")
+const requireVerifiedEmail=require("../middleware/auth/requireVerifiedEmail")
 const validateAllowedFields=require("../middleware/validation/validateAllowedField")
 const {createReviewValidation,updateReviewValidation}=require("../middleware/validation/reviewValidation")
 const {mongoIdValidation}=require("../middleware/validation/commonValidation")
@@ -11,6 +12,7 @@ const router=express.Router()
 router.post("/",
     createRateLimiter(15 * 60 * 1000, 10, "Too many review creation attempts. Please try again after 15 minutes."),
     authMiddleware,
+    requireVerifiedEmail,
     validateAllowedFields([
         "productId",
         "rating",

@@ -35,11 +35,7 @@ export function RegisterForm() {
     setIsLoading(true)
     try {
       await registerUser(data)
-      // Backend no longer returns a token on register — user must verify email first.
-      // Navigate to login with a state flag so LoginForm shows a contextual message.
-      navigate("/login", {
-        state: { registeredEmail: getValues("email") },
-      })
+      navigate("/dashboard", { replace: true })
     } catch (error) {
       toast.error(error.response?.data?.message || "Registration failed. Please try again.")
     } finally {

@@ -41,7 +41,7 @@ const getDashboardStats = async (sellerId) => {
         ]),
 
         ProductModel.aggregate([
-            // $match: Find active products from this seller that have at least one review
+            // $match: Pre-filter orders to only those that contain at least one of the seller's products
             { $match: { seller: sellerObjectId, isActive: true, totalReviews: { $gt: 0 } } },
             // $group: Calculate the average rating across all these products
             { $group: { _id: null, storeRating: { $avg: "$averageRating" } } }
@@ -93,6 +93,42 @@ const getDashboardStats = async (sellerId) => {
             { $sort: { createdAt: -1 } },
             // $limit: Only take the 5 most recent
             { $limit: 5 }
+        ]),
+        
+        // Stock Stats
+        ProductModel.countDocuments({ seller: sellerObjectId, stock: 0 }),
+        ProductModel.countDocuments({ seller: sellerObjectId, isActive: false }),
+
+        // Revenue Trend (Last 7 Days)
+        OrderModel.aggregate([
+            { $match: { 
+                paymentStatus: "PAID", 
+                orderStatus: { $nin: ["CANCELLED", "RETURNED"] },
+                createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+            } },
+            { $unwind: "$items" },
+            { $match: { "items.product": { $in: sellerProductIds } } },
+            { $group: { 
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                totalRevenue: { $sum: { $multiply: ["$items.sellingPrice", "$items.quantity"] } }
+            } },
+            { $sort: { _id: 1 } }
+        ]),
+
+        // Top Selling Products
+        OrderModel.aggregate([
+            { $match: { paymentStatus: "PAID", orderStatus: { $nin: ["CANCELLED", "RETURNED"] } } },
+            { $unwind: "$items" },
+            { $match: { "items.product": { $in: sellerProductIds } } },
+            { $group: { 
+                _id: "$items.product",
+                sold: { $sum: "$items.quantity" }
+            } },
+            { $sort: { sold: -1 } },
+            { $limit: 4 },
+            { $lookup: { from: "products", localField: "_id", foreignField: "_id", as: "product" } },
+            { $unwind: "$product" },
+            { $project: { name: "$product.name", img: { $arrayElemAt: ["$product.images", 0] }, sold: 1 } }
         ])
     ]);
 
@@ -103,21 +139,41 @@ const getDashboardStats = async (sellerId) => {
         pendingOrdersAggregation,
         storeRatingAggregation,
         recentProducts,
-        recentOrders
+        recentOrders,
+        outOfStockProducts,
+        draftProducts,
+        revenueTrendRaw,
+        topProductsRaw
     ] = results;
 
     const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].totalRevenue : 0;
     const ordersPending = pendingOrdersAggregation.length > 0 ? pendingOrdersAggregation[0].count : 0;
     const storeRating = storeRatingAggregation.length > 0 ? Number(storeRatingAggregation[0].storeRating.toFixed(1)) : 0;
 
+    // Fill missing dates in the 7-day trend
+    const revenueTrend = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const dateStr = d.toISOString().split('T')[0];
+        const match = revenueTrendRaw.find(r => r._id === dateStr);
+        revenueTrend.push({
+            name: d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+            value: match ? match.totalRevenue : 0
+        });
+    }
+
     return {
         totalProducts,
         activeProducts,
+        outOfStockProducts,
+        draftProducts,
         totalRevenue,
         ordersPending,
         storeRating,
         recentProducts,
-        recentOrders
+        recentOrders,
+        revenueTrend,
+        topProducts: topProductsRaw
     };
 };
 

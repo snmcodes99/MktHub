@@ -15,3 +15,5 @@ export const getAllOrders = (params) => axiosClient.get("/order", { params })
 export const updateOrderStatus = (id, data) => axiosClient.patch(`/order/${id}/status`, data)
 
 export const getSellerOrders = (params) => axiosClient.get("/order/seller/orders", { params })
+
+export const downloadInvoice = (id) => axiosClient.get(`/order/${id}/invoice`, { responseType: 'blob' })

@@ -1,13 +1,15 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { Search, ShoppingCart, User, LogOut, Package, Store } from "lucide-react"
+import { Search, ShoppingCart, User, LogOut, Moon, Sun } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { Logo } from "@/components/common/Logo"
 import { useAuth } from "@/hooks/useAuth"
+import { useTheme } from "@/context/ThemeContext"
 import { Button } from "@/components/ui/button"
 import { getCart } from "@/api/cartApi"
 
 export function Navbar() {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const initialSearch = searchParams.get("search") || ""
@@ -70,6 +72,16 @@ export function Navbar() {
             </form>
           </div>
 
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            {theme === "dark"
+              ? <Sun className="h-5 w-5 text-amber-400" />
+              : <Moon className="h-5 w-5" />}
+          </button>
+
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative rounded-full">
               <ShoppingCart className="h-5 w-5" />
@@ -83,9 +95,13 @@ export function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-2">
-              {/* Account icon always goes to the main dashboard (My Account) */}
+              {/* Account icon always goes to the user dashboard */}
               <Link to="/dashboard">
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" className="rounded-full hidden sm:inline-flex gap-2">
+                  <User className="h-4 w-4" />
+                  My Account
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-full sm:hidden">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>

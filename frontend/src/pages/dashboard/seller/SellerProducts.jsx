@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Pagination } from "@/components/ui/pagination"
 import {
   Table,
   TableBody,
@@ -20,6 +21,7 @@ import { toast } from "sonner"
 
 export default function SellerProducts() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModal, setDeleteModal] = useState(null)
@@ -33,7 +35,8 @@ export default function SellerProducts() {
     mrp: "",
     sellingPrice: "",
     stock: "",
-    images: [""]
+    images: [],
+    keyHighlights: [""]
   }
   
   const [productForm, setProductForm] = useState(initialProductState)
@@ -42,8 +45,8 @@ export default function SellerProducts() {
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getProducts({ limit: 100 }),
+    queryKey: ["products", page],
+    queryFn: () => getProducts({ limit: 10, page, showInactive: "true" }),
   })
 
   const { data: categoryData } = useQuery({
@@ -108,34 +111,48 @@ export default function SellerProducts() {
       return
     }
 
-    const payload = {
-      ...productForm,
-      mrp: Number(productForm.mrp),
-      sellingPrice: Number(productForm.sellingPrice),
-      stock: Number(productForm.stock),
-      images: productForm.images.filter(url => url.trim())
+    const formData = new FormData()
+    formData.append("name", productForm.name)
+    formData.append("description", productForm.description)
+    formData.append("brand", productForm.brand)
+    formData.append("category", productForm.category)
+    formData.append("mrp", Number(productForm.mrp))
+    formData.append("sellingPrice", Number(productForm.sellingPrice))
+    formData.append("stock", Number(productForm.stock))
+    
+    const validHighlights = productForm.keyHighlights?.filter(h => h.trim()) || []
+    if (validHighlights.length > 0) {
+      formData.append("keyHighlights", JSON.stringify(validHighlights))
+    }
+    
+    if (productForm.images && productForm.images.length > 0) {
+      productForm.images.forEach(file => {
+        if (file instanceof File) {
+          formData.append("images", file)
+        }
+      })
     }
 
     if (editModalOpen && currentProduct) {
-      updateMutation.mutate({ id: currentProduct._id, data: payload })
+      updateMutation.mutate({ id: currentProduct._id, data: formData })
     } else {
-      createMutation.mutate(payload)
+      createMutation.mutate(formData)
     }
   }
-
-  const handleImageChange = (index, value) => {
-    const newImages = [...productForm.images]
-    newImages[index] = value
-    setProductForm({ ...productForm, images: newImages })
+  
+  const handleHighlightChange = (index, value) => {
+    const newHL = [...productForm.keyHighlights]
+    newHL[index] = value
+    setProductForm({ ...productForm, keyHighlights: newHL })
   }
 
-  const addImageField = () => {
-    setProductForm({ ...productForm, images: [...productForm.images, ""] })
+  const addHighlightField = () => {
+    setProductForm({ ...productForm, keyHighlights: [...(productForm.keyHighlights || []), ""] })
   }
 
-  const removeImageField = (index) => {
-    const newImages = productForm.images.filter((_, i) => i !== index)
-    setProductForm({ ...productForm, images: newImages.length > 0 ? newImages : [""] })
+  const removeHighlightField = (index) => {
+    const newHL = productForm.keyHighlights.filter((_, i) => i !== index)
+    setProductForm({ ...productForm, keyHighlights: newHL.length > 0 ? newHL : [""] })
   }
   
   const openEditModal = (product) => {
@@ -148,7 +165,8 @@ export default function SellerProducts() {
       mrp: product.mrp,
       sellingPrice: product.sellingPrice,
       stock: product.stock,
-      images: product.images && product.images.length > 0 ? product.images : [""]
+      images: product.images && product.images.length > 0 ? product.images : [],
+      keyHighlights: product.keyHighlights && product.keyHighlights.length > 0 ? product.keyHighlights : [""]
     })
     setEditModalOpen(true)
   }
@@ -286,6 +304,13 @@ export default function SellerProducts() {
               </TableBody>
             </Table>
           )}
+          {data?.data?.pagination && (
+            <Pagination 
+              currentPage={page} 
+              totalPages={data.data.pagination.totalPages} 
+              onPageChange={setPage} 
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -338,7 +363,7 @@ export default function SellerProducts() {
               </Button>
             </div>
             
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-6 overflow-y-auto flex-1 min-h-0" data-lenis-prevent="true">
               <form id="productForm" onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
@@ -427,28 +452,73 @@ export default function SellerProducts() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 mt-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Product Images (URLs)</label>
-                    <Button type="button" variant="outline" size="sm" onClick={addImageField} className="h-8">
-                      <Plus className="mr-1 h-3 w-3" /> Add Image
+                    <label className="text-sm font-medium">Key Highlights</label>
+                    <Button type="button" variant="outline" size="sm" onClick={addHighlightField} className="h-8">
+                      <Plus className="mr-1 h-3 w-3" /> Add Highlight
                     </Button>
                   </div>
                   <div className="space-y-2">
-                    {productForm.images.map((img, index) => (
+                    {(productForm.keyHighlights || [""]).map((hl, index) => (
                       <div key={index} className="flex gap-2">
                         <Input 
-                          placeholder="https://example.com/image.jpg" 
-                          value={img}
-                          onChange={(e) => handleImageChange(index, e.target.value)}
+                          placeholder="e.g. Premium build quality and durability" 
+                          value={hl}
+                          onChange={(e) => handleHighlightChange(index, e.target.value)}
                         />
-                        {productForm.images.length > 1 && (
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeImageField(index)} className="shrink-0 text-destructive hover:bg-destructive/10">
+                        {(productForm.keyHighlights?.length || 1) > 1 && (
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removeHighlightField(index)} className="shrink-0 text-destructive hover:bg-destructive/10">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 mt-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Product Images</label>
+                  </div>
+                  <div className="space-y-2">
+                        <Input 
+                          type="file" 
+                          accept="image/*" 
+                          multiple 
+                          onChange={(e) => {
+                            const newFiles = Array.from(e.target.files);
+                            const totalFiles = [...productForm.images, ...newFiles];
+                            if (totalFiles.length > 8) {
+                              toast.error("You can only upload a maximum of 8 images.");
+                              setProductForm({...productForm, images: totalFiles.slice(0, 8)});
+                            } else {
+                              setProductForm({...productForm, images: totalFiles});
+                            }
+                            e.target.value = "";
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1 mb-2">Uploading new images will completely replace all existing images.</p>
+                        {productForm.images && productForm.images.length > 0 && (
+                          <div className="flex gap-2 mt-3 flex-wrap">
+                            {productForm.images.map((file, i) => (
+                              <div key={i} className="group h-20 w-20 bg-muted rounded-md border border-border overflow-hidden relative">
+                                <img src={file instanceof File ? URL.createObjectURL(file) : (file.url || file)} alt="" className="h-full w-full object-cover" />
+                                <button 
+                                  type="button" 
+                                  onClick={() => {
+                                    const newImages = [...productForm.images];
+                                    newImages.splice(i, 1);
+                                    setProductForm({...productForm, images: newImages});
+                                  }}
+                                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                   </div>
                 </div>
               </form>

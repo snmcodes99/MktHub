@@ -78,10 +78,7 @@ export function LoginForm() {
         </p>
       </div>
 
-      {/* Show registration success message with resend button if navigated here from RegisterForm */}
-      {location.state?.registeredEmail && (
-        <VerifyEmailBanner email={location.state.registeredEmail} isSuccess={true} />
-      )}
+
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">

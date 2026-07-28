@@ -8,14 +8,22 @@ const transporter = nodemailer.createTransport({
     }
 })
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({
+    to,
+    subject,
+    html,
+    attachments = []
+}) => {
+
     await transporter.sendMail({
-        from: `"MkttHub" <${process.env.EMAIL_USER}>`,
+        from: `"MktHub" <${process.env.EMAIL_USER}>`,
         to,
         subject,
-        html
-    })
-}
+        html,
+        attachments
+    });
+
+};
 const sendVerificationEmail = async (email, verificationUrl) => {
     return sendEmail({
         to: email,
@@ -41,8 +49,23 @@ const sendPasswordResetEmail = async (email, resetUrl) => {
         `
     })
 }
+const sendEmailChangeVerificationEmail = async (email, verificationUrl) => {
+    return sendEmail({
+        to: email,
+        subject: "Verify your new MktHub email address",
+        html: `
+            <h2>Email Change Verification</h2>
+            <p>You requested to change your email address.</p>
+            <p>Please click the link below to verify this new email address.</p>
+            <p>This link expires in 24 hours.</p>
+            <a href="${verificationUrl}">Verify New Email</a>
+        `
+    })
+}
+
 module.exports = {
     sendEmail,
     sendVerificationEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendEmailChangeVerificationEmail
 }

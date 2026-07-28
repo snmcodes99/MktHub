@@ -33,7 +33,7 @@ const getAllSellerRequests = async (query = {}) => {
     const { page, limit, skip } = getPagination(query);
 
     const sellerRequests = await sellerRequestModel.find()
-        .sort({ createdAt: -1 })
+        .sort({ createdAt: 1 })
         .skip(skip)
         .limit(limit)
         .populate("user", "name email")

@@ -1,7 +1,7 @@
 const productService = require("../services/productService")
 
 const createProduct = async (req, res) => {
-    const product = await productService.createProduct(req.body, req.user.id)
+    const product = await productService.createProduct(req.body, req.files, req.user.id)
     res.status(201).json({
         success: true,
         message: "product created succesfully",
@@ -26,7 +26,7 @@ const getProductByid = async (req, res) => {
     })
 }
 const updateProduct = async (req, res) => {
-    const products = await productService.updateProduct(req.params.id,req.body,req.user)
+    const products = await productService.updateProduct(req.params.id, req.body,req.files, req.user)
     return res.status(200).json({
         success: true,
         message: "product update succesfully",
@@ -34,7 +34,7 @@ const updateProduct = async (req, res) => {
     })
 }
 const deleteProduct = async (req, res) => {
-    const products = await productService.deleteProduct(req.params.id,req.user)
+    const products = await productService.deleteProduct(req.params.id, req.user)
     return res.status(200).json({
         success: true,
         message: "product deleted succesfully",

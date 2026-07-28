@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom"
-import { Package, User, MapPin, Settings, LayoutDashboard, ShoppingBag, Store, Users, BarChart3, ListOrdered } from "lucide-react"
+import { Package, User as UserIcon, MapPin, Settings, LayoutDashboard, ShoppingBag, Store, Users, BarChart3, ListOrdered } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 
 const customerLinks = [
-  { name: "My Profile", to: "/dashboard", icon: <User className="h-5 w-5" /> },
+  { name: "Dashboard", to: "/dashboard", icon: <UserIcon className="h-5 w-5" /> },
+  { name: "Edit Profile", to: "/dashboard/profile", icon: <Settings className="h-5 w-5" /> },
   { name: "My Orders", to: "/dashboard/orders", icon: <Package className="h-5 w-5" /> },
   { name: "Addresses", to: "/dashboard/addresses", icon: <MapPin className="h-5 w-5" /> },
   { name: "Become a Seller", to: "/dashboard/apply-seller", icon: <Store className="h-5 w-5" /> },
@@ -47,7 +48,10 @@ export function Sidebar() {
   }
 
   return (
-    <div className="sticky top-24 flex w-64 flex-col rounded-xl border bg-card py-4 shadow-sm h-[calc(100vh-8rem)] overflow-y-auto">
+    <div
+      className="sticky top-24 flex w-64 flex-col rounded-xl border bg-card py-4 shadow-sm h-[calc(100vh-8rem)] overflow-y-auto"
+      data-lenis-prevent="true"
+    >
       {linkGroups.map((group, index) => (
         <div key={group.title} className={index !== 0 ? "mt-6" : ""}>
           <div className="mb-2 px-6 pb-2 border-b">

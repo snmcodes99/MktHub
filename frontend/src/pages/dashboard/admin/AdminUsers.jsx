@@ -7,6 +7,7 @@ import { getAllUsers, toggleUserBan, updateUserRole } from "@/api/adminApi"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Pagination } from "@/components/ui/pagination"
 import {
   Table,
   TableBody,
@@ -19,6 +20,7 @@ import {
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("ALL")
+  const [page, setPage] = useState(1)
   const [banModalOpen, setBanModalOpen] = useState(false)
   const [banTargetUser, setBanTargetUser] = useState(null)
   const [roleModalOpen, setRoleModalOpen] = useState(false)
@@ -28,8 +30,8 @@ export default function AdminUsers() {
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: getAllUsers,
+    queryKey: ["admin-users", page],
+    queryFn: () => getAllUsers({ limit: 10, page }),
   })
 
   const banMutation = useMutation({
@@ -83,7 +85,8 @@ export default function AdminUsers() {
     }
   }
 
-  const users = data?.data?.data || []
+  const rawData = data?.data?.data
+  const users = Array.isArray(rawData) ? rawData : (rawData?.users ?? [])
   
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -249,6 +252,13 @@ export default function AdminUsers() {
                 })}
               </TableBody>
             </Table>
+          )}
+          {data?.data?.pagination && (
+            <Pagination 
+              currentPage={page} 
+              totalPages={data.data.pagination.totalPages} 
+              onPageChange={setPage} 
+            />
           )}
         </CardContent>
       </Card>

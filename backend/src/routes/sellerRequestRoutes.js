@@ -2,6 +2,7 @@ const express = require("express");
 
 const authMiddleware=require("../middleware/auth/authMiddleware");
 const authorize=require("../middleware/auth/authorize");
+const requireVerifiedEmail = require("../middleware/auth/requireVerifiedEmail");
 
 const validateAllowedField=require("../middleware/validation/validateAllowedField");
 const validate=require("../middleware/validation/validate");
@@ -18,6 +19,7 @@ const router=express.Router();
 router.post("/",
     createRateLimiter(60 * 60 * 1000, 5, "Too many seller requests. Please try again after 1 hour."),
     authMiddleware,
+    requireVerifiedEmail,
     authorize("CUSTOMER"),
     validateAllowedField([
         "shopName",

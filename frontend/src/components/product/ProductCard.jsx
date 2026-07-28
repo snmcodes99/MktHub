@@ -37,7 +37,7 @@ export function ProductCard({ product }) {
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all hover:shadow-lg">
       <Link to={`/products/${product._id}`} className="relative aspect-square overflow-hidden bg-muted">
         <img
-          src={product.images?.[0] || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"}
+          src={product.images?.[0]?.url || product.images?.[0] || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"}
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

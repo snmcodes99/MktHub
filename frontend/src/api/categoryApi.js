@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient"
 
-export const getCategories = () => axiosClient.get("/category")
+export const getCategories = (params) => axiosClient.get("/category", { params })
 
 export const createCategory = (data) => axiosClient.post("/category", data)
 

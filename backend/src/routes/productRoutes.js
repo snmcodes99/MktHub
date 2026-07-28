@@ -12,6 +12,7 @@ const productController=require("../controllers/productController");
 const { getProductsValidation,createProductValidation, updateProductValidation } = require("../middleware/validation/productValidation");
 const { mongoIdValidation } = require("../middleware/validation/commonValidation");
 const createRateLimiter = require("../middleware/rateLimit/createRateLimiter");
+const upload = require("../middleware/upload/upload");
 
 const router=express.Router();
 
@@ -23,6 +24,7 @@ router.post("/",
     authMiddleware,
     authorize("SELLER","ADMIN"),
     ensureSellerNotBanned,
+    upload.array("images", 8), 
     validateAllowedField([
         "name",
         "description",
@@ -31,7 +33,7 @@ router.post("/",
         "mrp",
         "sellingPrice",
         "stock",
-        "images",
+        "keyHighlights"
     ]),
     createProductValidation,
     validate,
@@ -43,6 +45,7 @@ router.patch("/:id",
     authMiddleware,
     authorize("SELLER", "ADMIN"),
     ensureSellerNotBanned,
+    upload.array("images", 8),
     validateAllowedField([
         "name",
         "description",
@@ -52,6 +55,7 @@ router.patch("/:id",
         "sellingPrice",
         "stock",
         "images",
+        "keyHighlights"
     ]),
     mongoIdValidation("id"),
     updateProductValidation,

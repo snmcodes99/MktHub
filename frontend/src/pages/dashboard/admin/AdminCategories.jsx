@@ -5,6 +5,7 @@ import { getCategories, createCategory, deleteCategory, updateCategory } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Pagination } from "@/components/ui/pagination"
 import {
   Table,
   TableBody,
@@ -19,13 +20,14 @@ export default function AdminCategories() {
   const queryClient = useQueryClient()
   const [newCategoryName, setNewCategoryName] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
   const [editModal, setEditModal] = useState(null) // { _id, name }
   const [editName, setEditName] = useState("")
   const [deleteModal, setDeleteModal] = useState(null) // { _id, name }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
+    queryKey: ["categories", page],
+    queryFn: () => getCategories({ limit: 10, page }),
   })
 
   const createMutation = useMutation({
@@ -185,6 +187,13 @@ export default function AdminCategories() {
                 ))}
               </TableBody>
             </Table>
+          )}
+          {data?.data?.pagination && (
+            <Pagination 
+              currentPage={page} 
+              totalPages={data.data.pagination.totalPages} 
+              onPageChange={setPage} 
+            />
           )}
         </CardContent>
       </Card>

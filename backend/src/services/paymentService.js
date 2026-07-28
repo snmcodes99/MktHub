@@ -1,4 +1,5 @@
 const razorpay = require("../config/razorpay")
+const invoiceQueue = require("../jobs/invoice/invoiceQueue")
 const PaymentModel = require("../models/Payment")
 const ReservationModel = require("../models/Reservation")
 const { releaseReserveInventory, confirmReservedInventory } = require("./inventoryService")
@@ -313,6 +314,13 @@ const processSuccessfulPayment = async (paymentEntity) => {
         }
 
         await session.commitTransaction()
+        
+        try {
+            await invoiceQueue.add("generate-invoice", { orderId: existingOrder._id })
+        } catch (err) {
+            console.error("Failed to queue invoice generation for online order:", err.message)
+        }
+
         return {
             alreadyProcessed: false,
             orderId: existingOrder._id,

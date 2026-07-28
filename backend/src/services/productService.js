@@ -4,10 +4,11 @@ const slugify = require("slugify");
 const ApiError = require("../utils/ApiErrors");
 const { getPagination, buildPagination } = require("../utils/pagination.utils");
 const { buildProductQuery } = require("../utils/productQuery.util");
-const { getCache, setCache, deleteCache } = require("../utils/redis.utils");
-const { buildProductListCacheKey } = require("../utils/cacheKey.util")
-const createProduct = async (productdata, sellerId) => {
-    const { name, description, brand, category, mrp, sellingPrice, stock, images } = productdata
+const { getCache, setCache, deleteCache, clearCachePattern } = require("../utils/redis.utils");
+const { buildProductListCacheKey } = require("../utils/cacheKey.util");
+const { uploadImages, deleteImage, deleteImages } = require("./cloudinaryService");
+const createProduct = async (productdata, files, sellerId) => {
+    const { name, description, brand, category, mrp, sellingPrice, stock, keyHighlights } = productdata
     const slug = slugify(name, {
         lower: true,
         strict: true,
@@ -24,10 +25,38 @@ const createProduct = async (productdata, sellerId) => {
     if (existProduct) {
         throw new ApiError(409, "product already exist");
     }
-    const product = await ProductModel.create({
-        name, description, slug, brand, category, mrp, sellingPrice, stock, images, seller: sellerId
-    })
-    return product
+    if (!files || files.length === 0) {
+        throw new ApiError(400, "At least one product image is required");
+    }
+    let uploadedImages = [];
+    try {
+        uploadedImages = await uploadImages(files);
+        const product = await ProductModel.create({
+            name,
+            description,
+            slug,
+            brand,
+            keyHighlights,
+            category,
+            seller: sellerId,
+            mrp,
+            sellingPrice,
+            stock,
+            images: uploadedImages
+        });
+        await clearCachePattern("product_list:*");
+        return product;
+
+    }
+    catch (error) {
+        if (uploadedImages.length > 0) {
+            const publicIds = uploadedImages.map(
+                image => image.publicId
+            );
+            await deleteImages(publicIds);
+        }
+        throw error;
+    }
 }
 
 const getAllProducts = async (query) => {
@@ -58,18 +87,18 @@ const getAllProducts = async (query) => {
     const pagination = buildPagination(
         page, limit, totalItems
     )
-const response = {
-    products,
-    pagination
-}
+    const response = {
+        products,
+        pagination
+    }
 
-await setCache(
-    cacheKey,
-    response,
-    120
-)
+    await setCache(
+        cacheKey,
+        response,
+        120
+    )
 
-return response
+    return response
 }
 
 const getProductByid = async (id) => {
@@ -98,77 +127,118 @@ const getProductByid = async (id) => {
     return product
 }
 
-const updateProduct = async (productId, updateData, seller) => {
+const updateProduct = async (productId, updateData, files, seller) => {
     const product = await ProductModel.findById(productId);
     if (!product || !product.isActive) {
-        throw new ApiError(404, "Product not found")
+        throw new ApiError(404, "Product not found");
     }
-    const sellerId = seller._id
-    const sellerRole = seller.role
-
+    const sellerId = seller._id;
+    const sellerRole = seller.role;
     if (sellerRole === "SELLER") {
         if (product.seller.toString() !== sellerId.toString()) {
-            throw new ApiError(403, "you are not allowed to update");
+            throw new ApiError(403, "You are not allowed to update");
         }
     }
     if (updateData.category) {
-        const existcategory = await CategoryModel.exists({
+        const existCategory = await CategoryModel.exists({
             _id: updateData.category,
-            isActive: true,
-        })
-        if (!existcategory) {
-            throw new ApiError(404, "category not found")
+            isActive: true
+        });
+
+        if (!existCategory) {
+            throw new ApiError(404, "Category not found");
         }
     }
     if (updateData.name) {
         const slug = slugify(updateData.name, {
             lower: true,
             strict: true,
-            trim: true,
-        })
+            trim: true
+        });
         const existingProduct = await ProductModel.findOne({
             seller: product.seller,
             slug,
-            _id: { $ne: productId },
-        })
+            _id: { $ne: productId }
+        });
         if (existingProduct) {
-            throw new ApiError(409, "product already exists");
+            throw new ApiError(409, "Product already exists");
         }
-        updateData.slug = slug
+        updateData.slug = slug;
     }
     const newMrp = updateData.mrp ?? product.mrp;
-    const newSellingPrice = updateData.sellingPrice ?? product.sellingPrice
+    const newSellingPrice = updateData.sellingPrice ?? product.sellingPrice;
     if (newSellingPrice > newMrp) {
-        throw new ApiError(400, "Selling price cannot be greater than MRP")
+        throw new ApiError(
+            400,
+            "Selling price cannot be greater than MRP"
+        );
     }
-    Object.assign(product, updateData)
-    await product.save()
-    await deleteCache(`product:${productId}`)
-    return product
+    let uploadedImages = [];
+    const oldImages = product.images;
+    try {
+        if (files && files.length > 0) {
+            uploadedImages = await uploadImages(files);
+          updateData.images = uploadedImages;
+        }
+        Object.assign(product, updateData);
+        await product.save();
+        await deleteCache(`product:${productId}`);
+        await clearCachePattern("product_list:*");
+        if (files && files.length > 0 && oldImages.length > 0) {
+            const publicIds = oldImages.map(
+                ({ publicId }) => publicId
+            );
+         try {
+                await deleteImages(publicIds);
+            } 
+            catch (err) {
+                console.error(
+                    "Failed to delete old Cloudinary images:",
+                    err.message
+                );
+            }
+        }
+        return product;
+
+    } 
+    catch (error) {
+        if (uploadedImages.length > 0) {
+            const publicIds = uploadedImages.map(
+                ({ publicId }) => publicId
+            );
+           await deleteImages(publicIds);
+        }
+        throw error;
+    }
 }
 
 const deleteProduct = async (productId, seller) => {
+
     const product = await ProductModel.findOne({
         _id: productId,
-        isActive: true,
-    })
+        isActive: true
+    });
+
     if (!product) {
-        throw new ApiError(404, "product not found")
+        throw new ApiError(404, "Product not found");
     }
-    const sellerId = seller._id
-    const sellerRole = seller.role
+
+    const sellerId = seller._id;
+    const sellerRole = seller.role;
 
     if (sellerRole === "SELLER") {
-        if (product.seller.toString() !== sellerId.toString()) {
-            throw new ApiError(403, "you are not allowed to delete");
-        }
-    }
-    product.isActive = false
-    await product.save()
-    await deleteCache(`product:${productId}`)
-    return product
-}
 
+        if (product.seller.toString() !== sellerId.toString()) {
+            throw new ApiError(403,"You are not allowed to delete");
+        }
+
+    }
+    product.isActive = false;
+    await product.save();
+    await deleteCache(`product:${productId}`);
+    await clearCachePattern("product_list:*");
+    return product;
+}
 const toggleProductActive = async (productId, seller) => {
     const product = await ProductModel.findById(productId);
     if (!product) {
@@ -186,6 +256,7 @@ const toggleProductActive = async (productId, seller) => {
     product.isActive = !product.isActive;
     await product.save();
     await deleteCache(`product:${productId}`)
+    await clearCachePattern("product_list:*");
     return product;
 }
 

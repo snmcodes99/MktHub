@@ -4,7 +4,7 @@ export const createSellerRequest = (data) => axiosClient.post("/seller-request",
 
 export const getMySellerRequest = () => axiosClient.get("/seller-request/me")
 
-export const getAllSellerRequests = () => axiosClient.get("/seller-request")
+export const getAllSellerRequests = (params) => axiosClient.get("/seller-request", { params })
 
 export const approveSellerRequest = (id) => axiosClient.patch(`/seller-request/${id}/approve`)
 

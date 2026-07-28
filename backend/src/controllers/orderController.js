@@ -1,72 +1,72 @@
-const orderService=require("../services/order/orderService")
+const orderService = require("../services/order/orderService")
 
-const placeOrder=async(req,res)=>{
-    const newOrder=await orderService.placeOrder(req.body,
+const placeOrder = async (req, res) => {
+    const newOrder = await orderService.placeOrder(req.body,
         req.user
     )
     res.status(201).json({
-        success:true,
-        message:"Order placed ",
-        data:newOrder
+        success: true,
+        message: "Order placed ",
+        data: newOrder
     })
 }
 
-const getMyOrders=async(req,res)=>{
-    const orders=await orderService.getMyOrders(req.user)
+const getMyOrders = async (req, res) => {
+    const orders = await orderService.getMyOrders(req.user)
     res.status(200).json({
-        success:true,
-        message:"Orders fetched successfully",
-        data:orders
+        success: true,
+        message: "Orders fetched successfully",
+        data: orders
     })
 }
 
-const getOrderById=async(req,res)=>{
-    const order=await orderService.getOrderById(req.params.id,req.user)
+const getOrderById = async (req, res) => {
+    const order = await orderService.getOrderById(req.params.id, req.user)
     res.status(200).json({
-        success:true,
-        message:"Order fetched successfully",
-        data:order
+        success: true,
+        message: "Order fetched successfully",
+        data: order
     })
 }
 
-const cancelOrder=async(req,res)=>{
+const cancelOrder = async (req, res) => {
     const reason = req.body.reason || "Cancelled by user";
-    const order=await orderService.cancelOrder(req.params.id,req.user,reason)
+    const order = await orderService.cancelOrder(req.params.id, req.user, reason)
     res.status(200).json({
-        success:true,
-        message:"Order cancelled successfully",
-        data:order
+        success: true,
+        message: "Order cancelled successfully",
+        data: order
     })
 }
 
-const returnOrder=async(req,res)=>{
-    const order=await orderService.returnOrder(req.params.id,req.user)
+const returnOrder = async (req, res) => {
+    const order = await orderService.returnOrder(req.params.id, req.user)
     res.status(200).json({
-        success:true,
-        message:"Order returned successfully",
-        data:order
+        success: true,
+        message: "Order returned successfully",
+        data: order
     })
 }
 
-const getAllOrders=async(req,res)=>{
-    const result=await orderService.getAllOrders(req.query)
+const getAllOrders = async (req, res) => {
+    const result = await orderService.getAllOrders(req.query)
     res.status(200).json({
-        success:true,
-        message:"Orders fetched successfully",
-        data:result
+        success: true,
+        message: "Orders fetched successfully",
+        data: result
     })
 }
 
-const updateOrderStatus=async(req,res)=>{
-    const order=await orderService.updateOrderStatus(req.params.id,req.body.status)
+const updateOrderStatus = async (req, res) => {
+    const order = await orderService.updateOrderStatus(req.params.id, req.body.status)
     res.status(200).json({
-        success:true,
-        message:"Order status updated successfully",
-        data:order
+        success: true,
+        message: "Order status updated successfully",
+        data: order
     })
 }
 
-const getSellerOrders = async(req, res) => {
+const getSellerOrders = async (req, res) => {
     // This calls the service which we will add next
     const result = await orderService.getSellerOrders(req.user._id, req.query)
     res.status(200).json({
@@ -76,7 +76,17 @@ const getSellerOrders = async(req, res) => {
     })
 }
 
-module.exports={
+const downloadInvoice = async (req, res) => {
+    const { pdfBuffer, orderNumber } = await orderService.downloadInvoice(req.params.id, req.user);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Invoice-${orderNumber}.pdf`
+    );
+    res.send(pdfBuffer);
+};
+
+module.exports = {
     placeOrder,
     getMyOrders,
     getOrderById,
@@ -84,5 +94,6 @@ module.exports={
     returnOrder,
     getAllOrders,
     updateOrderStatus,
-    getSellerOrders
+    getSellerOrders,
+    downloadInvoice
 }

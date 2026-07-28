@@ -106,4 +106,14 @@ router.post("/resend-verification",
 )
 router.post("/logout", authController.logout)
 router.get("/verify-email/:token", authController.verifyEmail)
+router.get("/verify-email-change/:token", authController.verifyEmailChange)
+router.post("/resend-email-change",
+    createRateLimiter(
+        60 * 60 * 1000,
+        10,
+        "Too many resend attempts. Please try again after 1 hour."
+    ),
+    authMiddleware,
+    authController.resendEmailChange
+)
 module.exports = router

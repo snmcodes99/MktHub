@@ -3,11 +3,12 @@ const { getRefreshCookieOptions } = require("../utils/tokenUtils");
 
 const register = async (req, res) => {
     const data = req.body;
-    const { user } = await authService.registerSerice(data);
+    const { user, accessToken, refreshToken } = await authService.registerSerice(data);
+    res.cookie("refreshToken", refreshToken, getRefreshCookieOptions())
     res.status(201).json({
         success: true,
         message: "User Created Succesfully",
-        data: { user }
+        data: { user, accessToken }
     })
 }
 
@@ -119,6 +120,26 @@ const resendVerificationEmail = async (req, res) => {
         message: "If the account exists and requires verification, a new verification email has been sent."
     })
 }
+const verifyEmailChange = async (req, res) => {
+    const { token } = req.params
+
+    await authService.verifyEmailChange(token)
+
+    res.status(200).json({
+        success: true,
+        message: "Email change verified successfully."
+    })
+}
+
+const resendEmailChange = async (req, res) => {
+    await authService.resendEmailChange(req.user._id)
+
+    res.status(200).json({
+        success: true,
+        message: "If a pending email exists, a new verification email has been sent."
+    })
+}
+
 module.exports = {
     register,
     login,
@@ -131,5 +152,7 @@ module.exports = {
     forgotPassword,
     resetPassword,
     verifyEmail,
-    resendVerificationEmail
+    resendVerificationEmail,
+    verifyEmailChange,
+    resendEmailChange
 }

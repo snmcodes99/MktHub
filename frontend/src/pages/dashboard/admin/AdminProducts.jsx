@@ -1,29 +1,22 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Package, Loader2, Trash2, Search, Image as ImageIcon } from "lucide-react"
+import { Package, Loader2, Trash2, Search, Image as ImageIcon, AlertTriangle, CheckCircle } from "lucide-react"
 import { getProducts, deleteProduct } from "@/api/productApi"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Pagination } from "@/components/ui/pagination"
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
   const [deleteModal, setDeleteModal] = useState(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["all-products-admin"],
-    queryFn: () => getProducts({ limit: 100 }),
+    queryKey: ["all-products-admin", page],
+    queryFn: () => getProducts({ limit: 10, page, showInactive: "true" }),
   })
 
   const deleteMutation = useMutation({
@@ -33,14 +26,11 @@ export default function AdminProducts() {
       setDeleteModal(null)
       queryClient.invalidateQueries({ queryKey: ["all-products-admin"] })
     },
-    onError: (error) => {
-      toast.error(error?.response?.data?.message || "Failed to delete product")
-    }
+    onError: (error) => toast.error(error?.response?.data?.message || "Failed to delete product")
   })
 
   const products = data?.data?.data?.products || []
-  
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.seller?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -55,119 +45,170 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Products Registry</h2>
-          <p className="text-muted-foreground">Monitor and manage all products listed on the platform.</p>
+          <h2 className="text-xl font-bold text-slate-900">Products Registry</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Monitor and manage all products listed on the platform.</p>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="search"
-            placeholder="Search products, sellers, or categories..."
-            className="pl-9"
+            placeholder="Search products, sellers..."
+            className="pl-9 bg-white border-slate-200 rounded-xl text-sm h-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {filteredProducts.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center text-center border-dashed">
-              <div className="mb-4 rounded-full bg-muted p-4">
-                <Package className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold">No products found</h3>
-              <p className="text-muted-foreground">Try adjusting your search criteria.</p>
+      {/* Table Card */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        {filteredProducts.length === 0 ? (
+          <div className="flex h-64 flex-col items-center justify-center text-center">
+            <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-3">
+              <Package className="h-7 w-7 text-muted-foreground" />
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]">Image</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Seller</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <h3 className="font-semibold text-foreground">No products found</h3>
+            <p className="text-sm text-muted-foreground mt-1">Try adjusting your search criteria.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Product</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Seller</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Price</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Stock</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Status</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
                 {filteredProducts.map((product) => (
-                  <TableRow key={product._id}>
-                    <TableCell>
-                      <div className="h-10 w-10 overflow-hidden rounded-md border bg-muted flex items-center justify-center">
-                        {product.images && product.images.length > 0 ? (
-                          <img
-                            src={product.images[0].url || product.images[0]}
-                            alt={product.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
+                  <tr key={product._id} className="hover:bg-muted/40 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-11 w-11 rounded-xl border border-border bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                          {product.images?.length > 0 ? (
+                            <img
+                              src={product.images[0].url || product.images[0]}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="h-5 w-5 text-slate-300" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground max-w-[200px] truncate">{product.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 font-mono">#{product._id.slice(-8)}</p>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">{product.seller?.name || "Unknown"}</span>
-                    </TableCell>
-                    <TableCell>{product.category?.name || "Uncategorized"}</TableCell>
-                    <TableCell className="text-right">{formatPrice(product.sellingPrice)}</TableCell>
-                    <TableCell className="text-right">
-                      <span className={product.stock === 0 ? "text-destructive font-semibold" : ""}>{product.stock}</span>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+                          {(product.seller?.name || "?")[0].toUpperCase()}
+                        </div>
+                        <span className="text-sm text-foreground font-medium">{product.seller?.name || "Unknown"}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                        {product.category?.name || "Uncategorized"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <p className="font-bold text-sm text-foreground">{formatPrice(product.sellingPrice)}</p>
+                      {product.mrp > product.sellingPrice && (
+                        <p className="text-xs text-muted-foreground line-through">{formatPrice(product.mrp)}</p>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      {product.stock === 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-semibold">
+                          <AlertTriangle className="h-3 w-3" /> 0
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center justify-center h-6 min-w-[28px] px-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+                          {product.stock}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      {product.isActive ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+                          <CheckCircle className="h-3 w-3" /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-xs font-semibold">
+                          Inactive
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button
                         onClick={() => setDeleteModal(product)}
                         disabled={deleteMutation.isPending}
+                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {data?.data?.pagination && (
+          <div className="border-t border-border px-5 py-3">
+            <Pagination
+              currentPage={page}
+              totalPages={data.data.pagination.totalPages}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-background rounded-xl shadow-xl w-full max-w-md overflow-hidden border">
-            <div className="p-1 bg-destructive" />
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="rounded-full bg-destructive/10 p-2">
-                  <Trash2 className="h-5 w-5 text-destructive" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="h-1 w-full bg-red-500" />
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <Trash2 className="h-5 w-5 text-red-600" />
                 </div>
-                <h3 className="text-lg font-semibold">Delete Product</h3>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900">Delete Product</h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Are you sure you want to delete <span className="font-semibold text-slate-800">"{deleteModal.name}"</span>? This action cannot be undone.
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Are you sure you want to forcibly delete <span className="font-semibold text-foreground">"{deleteModal.name}"</span>? This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 bg-muted/50 px-6 py-4">
-              <Button variant="outline" onClick={() => setDeleteModal(null)} disabled={deleteMutation.isPending}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => deleteMutation.mutate(deleteModal._id)}
-                disabled={deleteMutation.isPending}
-              >
-                {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Delete Product
-              </Button>
+              <div className="flex gap-3 justify-end pt-2">
+                <Button variant="outline" className="rounded-xl" onClick={() => setDeleteModal(null)} disabled={deleteMutation.isPending}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="rounded-xl"
+                  onClick={() => deleteMutation.mutate(deleteModal._id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Delete Product
+                </Button>
+              </div>
             </div>
           </div>
         </div>

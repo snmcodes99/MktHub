@@ -4,7 +4,8 @@ dotenv.config();
 const connectDB = require("./src/config/db")
 const { connectRedis } = require("./src/config/redis");
 const boot = require("./src/config/boot")
-const startScheduler = require("./src/jobs/schedular");
+const startScheduler = require("./src/jobs/reservation/schedular");
+const startWorkers = require("./src/jobs/startWorkers");
 
 const app = require("./src/app");
 
@@ -16,6 +17,7 @@ const startServer = async () => {
         await connectDB()
         await connectRedis()
         await boot()
+        startWorkers()
         startScheduler()
     } catch (err) {
         console.log(err)

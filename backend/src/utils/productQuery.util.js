@@ -1,8 +1,9 @@
 const buildProductQuery = (query) => {
     const { category, brand, minPrice, maxPrice, search, sort } = query;
-    const filter = {
-        isActive: true
-    };
+    const filter = {};
+    if (query.showInactive !== "true") {
+        filter.isActive = true;
+    }
     if (category) {
         const categories = category.split(',');
         filter.category = { $in: categories };

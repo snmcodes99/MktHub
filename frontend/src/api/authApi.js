@@ -24,3 +24,7 @@ export const resetPassword = (token, data) => axiosClient.post(`/auth/reset-pass
 export const verifyEmail = (token) => axiosClient.get(`/auth/verify-email/${token}`)
 
 export const resendVerificationEmail = (data) => axiosClient.post("/auth/resend-verification", data)
+
+export const verifyEmailChange = (token) => axiosClient.get(`/auth/verify-email-change/${token}`)
+
+export const resendEmailChange = () => axiosClient.post("/auth/resend-email-change")

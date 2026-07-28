@@ -28,7 +28,13 @@ export default function SellerApplication() {
       queryClient.invalidateQueries({ queryKey: ["my-seller-request"] })
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || "Failed to submit application")
+      if (error?.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
+        toast.error("Email Verification Required", {
+          description: error?.response?.data?.message || "Please verify your email before applying as a seller."
+        })
+      } else {
+        toast.error(error?.response?.data?.message || "Failed to submit application")
+      }
     }
   })
 

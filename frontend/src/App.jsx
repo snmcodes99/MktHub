@@ -3,6 +3,7 @@ import { ReactLenis } from 'lenis/react'
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
 import { PageTransition } from "@/components/layout/PageTransition"
+import { EmailVerificationBanner } from "@/components/layout/EmailVerificationBanner"
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
@@ -63,6 +64,7 @@ function DashboardLayout() {
             ? "block fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-background border-r shadow-2xl transition-transform transform translate-x-0 overflow-y-auto pt-20 px-4" 
             : "hidden"
           } shrink-0 md:block md:static md:w-auto md:bg-transparent md:border-0 md:shadow-none md:p-0 md:pt-0`}
+          data-lenis-prevent="true"
         >
           {isMobileMenuOpen && (
             <div className="flex justify-between items-center md:hidden mb-4 pb-2 border-b">
@@ -78,7 +80,7 @@ function DashboardLayout() {
           <Sidebar />
         </aside>
 
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 min-w-0 min-h-0">
           <PageTransition>
             <Outlet />
           </PageTransition>
@@ -94,6 +96,7 @@ import RegisterPage from "@/pages/auth/RegisterPage"
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
 import VerifyEmailPage from "@/pages/auth/VerifyEmailPage"
+import VerifyEmailChangePage from "@/pages/auth/VerifyEmailChangePage"
 import ProductListingPage from "@/pages/product/ProductListingPage"
 import ProductDetailPage from "@/pages/product/ProductDetailPage"
 import CartPage from "@/pages/cart/CartPage"
@@ -103,6 +106,7 @@ import CustomerDashboard from "@/pages/dashboard/CustomerDashboard"
 import CustomerOverview from "@/pages/dashboard/customer/CustomerOverview"
 import CustomerProfile from "@/pages/dashboard/customer/CustomerProfile"
 import CustomerOrders from "@/pages/dashboard/customer/CustomerOrders"
+import CustomerOrderDetails from "@/pages/dashboard/customer/CustomerOrderDetails"
 import CustomerAddresses from "@/pages/dashboard/customer/CustomerAddresses"
 import SellerApplication from "@/pages/dashboard/customer/SellerApplication"
 
@@ -132,6 +136,7 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+            <Route path="/verify-email-change/:token" element={<VerifyEmailChangePage />} />
             <Route path="/products" element={<ProductListingPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
@@ -147,6 +152,7 @@ export default function App() {
                 <Route index element={<CustomerOverview />} />
                 <Route path="profile" element={<CustomerProfile />} />
                 <Route path="orders" element={<CustomerOrders />} />
+                <Route path="orders/:id" element={<CustomerOrderDetails />} />
                 <Route path="addresses" element={<CustomerAddresses />} />
                 <Route path="apply-seller" element={<SellerApplication />} />
               </Route>

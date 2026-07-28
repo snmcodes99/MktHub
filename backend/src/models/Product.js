@@ -23,6 +23,10 @@ const ProductScheme = new mongoose.Schema({
         type: String,
         trim: true
     },
+    keyHighlights: {
+        type: [String],
+        default: []
+    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -65,8 +69,26 @@ const ProductScheme = new mongoose.Schema({
         default: 0
     },
     images: {
-        type: [String],
-        default: []
+        type: [
+            {
+                url: {
+                    type: String,
+                    required: true,
+                    trim: true
+                },
+                publicId: {
+                    type: String,
+                    required: true,
+                    trim: true
+                }
+            }
+        ],
+        validate: {
+            validator: function (images) {
+                return images.length >= 1 && images.length <= 8;
+            },
+            message: "Product must contain between 1 and 8 images."
+        }
     },
     isActive: {
         type: Boolean,

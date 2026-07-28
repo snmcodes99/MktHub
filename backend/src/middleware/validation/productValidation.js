@@ -21,6 +21,26 @@ const createProductValidation = [
     .bail()
     .isLength({ min: 2, max: 50 })
     .withMessage("Brand must be between 2 and 50 characters"),
+  body("keyHighlights")
+    .optional()
+    .customSanitizer(value => {
+        if (typeof value === 'string') {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) return parsed;
+            } catch(e) {}
+            return [value];
+        }
+        return value;
+    })
+    .isArray()
+    .withMessage("Key Highlights must be an array of strings"),
+  body("keyHighlights.*")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("Key Highlight must be a non-empty string"),
   body("category")
     .notEmpty()
     .withMessage("Category is required")
@@ -52,14 +72,6 @@ const createProductValidation = [
     .bail()
     .isInt({ min: 0 })
     .withMessage("Stock must be a non-negative integer"),
-  body("images")
-    .optional()
-    .isArray()
-    .withMessage("Images must be an array"),
-  body("images.*")
-    .optional()
-    .isString()
-    .withMessage("Each image must be a string"),
   body("isActive")
     .optional()
     .isBoolean()
@@ -90,6 +102,26 @@ const updateProductValidation = [
     .bail()
     .isLength({ min: 2, max: 50 })
     .withMessage("Brand must be between 2 and 50 characters"),
+  body("keyHighlights")
+    .optional()
+    .customSanitizer(value => {
+        if (typeof value === 'string') {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) return parsed;
+            } catch(e) {}
+            return [value];
+        }
+        return value;
+    })
+    .isArray()
+    .withMessage("Key Highlights must be an array of strings"),
+  body("keyHighlights.*")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("Key Highlight must be a non-empty string"),
   body("category")
     .optional()
     .isMongoId()
@@ -106,14 +138,6 @@ const updateProductValidation = [
     .optional()
     .isInt({ min: 0 })
     .withMessage("Stock must be a non-negative integer"),
-  body("images")
-    .optional()
-    .isArray()
-    .withMessage("Images must be an array"),
-  body("images.*")
-    .optional()
-    .isString()
-    .withMessage("Each image must be a string"),
   body("isActive")
     .optional()
     .isBoolean()

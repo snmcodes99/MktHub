@@ -160,7 +160,13 @@ export default function CheckoutPage() {
       }
       
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message || "Failed to process checkout")
+      if (error.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
+        toast.error("Email Verification Required", {
+          description: error.response?.data?.message || "Please verify your email before placing an order."
+        })
+      } else {
+        toast.error(error.response?.data?.message || error.message || "Failed to process checkout")
+      }
     } finally {
       setIsProcessing(false)
     }
@@ -292,11 +298,11 @@ export default function CheckoutPage() {
         <div className="sticky top-24 w-full rounded-2xl border bg-card p-6 shadow-sm lg:w-96">
           <h2 className="mb-4 text-xl font-bold">Order Summary</h2>
           
-          <div className="mb-6 space-y-4 max-h-[30vh] overflow-y-auto pr-2 scrollbar-thin">
+          <div className="mb-6 space-y-4 max-h-[30vh] overflow-y-auto pr-2 scrollbar-thin" data-lenis-prevent="true">
             {orderSummary.items.map((item) => (
               <div key={item._id} className="flex items-center gap-4">
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-muted">
-                  <img src={item.product.images?.[0] || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"} alt={item.product.name} className="h-full w-full object-cover" />
+                  <img src={item.product.images?.[0]?.url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"} alt={item.product.name} className="h-full w-full object-cover" />
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <h4 className="truncate text-sm font-medium">{item.product.name}</h4>

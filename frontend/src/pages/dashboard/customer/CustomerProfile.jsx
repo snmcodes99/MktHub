@@ -1,13 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
-import { changePassword } from "@/api/authApi"
+import { changePassword, resendVerificationEmail, resendEmailChange } from "@/api/authApi"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, LogOut } from "lucide-react"
+import { Loader2, User, LogOut, AlertTriangle, Clock } from "lucide-react"
 
 export default function CustomerProfile() {
   const { user, logout, logoutAll, updateProfile } = useAuth()
@@ -15,6 +15,7 @@ export default function CustomerProfile() {
 
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileName, setProfileName] = useState(user?.name ?? "")
+  const [profileEmail, setProfileEmail] = useState(user?.email ?? "")
 
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordData, setPasswordData] = useState({
@@ -24,14 +25,56 @@ export default function CustomerProfile() {
   })
 
   const [logoutAllLoading, setLogoutAllLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendChangeLoading, setResendChangeLoading] = useState(false)
 
-  // --- Profile Update (name only — email is immutable) ---
+  // --- Resend Verification Email ---
+  const handleResend = async () => {
+    setResendLoading(true)
+    try {
+      await resendVerificationEmail({ email: user.email })
+      toast.success("Verification email sent", {
+        description: "Please check your inbox (and spam folder).",
+      })
+    } catch (error) {
+      toast.error("Failed to resend email", {
+        description: error?.response?.data?.message || "Please try again later.",
+      })
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
+  // --- Resend Email Change Verification ---
+  const handleResendChange = async () => {
+    setResendChangeLoading(true)
+    try {
+      await resendEmailChange()
+      toast.success("Verification email sent", {
+        description: "Please check the inbox of your new email address.",
+      })
+    } catch (error) {
+      toast.error("Failed to resend email", {
+        description: error?.response?.data?.message || "Please try again later.",
+      })
+    } finally {
+      setResendChangeLoading(false)
+    }
+  }
+
+  // --- Profile Update ---
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
+    const isEmailChanged = profileEmail !== user.email
+
     setProfileLoading(true)
     try {
-      await updateProfile({ name: profileName })
-      toast.success("Profile updated successfully!")
+      await updateProfile({ name: profileName, email: profileEmail })
+      if (isEmailChanged) {
+        toast.success("Verification email sent to your new email address.")
+      } else {
+        toast.success("Profile updated successfully!")
+      }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to update profile")
     } finally {
@@ -88,11 +131,11 @@ export default function CustomerProfile() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Profile Info — name only, email is read-only */}
+        {/* Profile Info */}
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
-            <CardDescription>You can update your name. Email cannot be changed.</CardDescription>
+            <CardDescription>Update your personal details. Changing your email address will require you to verify it again.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleProfileSubmit} className="space-y-4">
@@ -119,18 +162,55 @@ export default function CustomerProfile() {
                 />
               </div>
 
-              {/* Email is immutable — shown as read-only */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={user?.email ?? ""}
-                  readOnly
-                  disabled
-                  className="opacity-60 cursor-not-allowed"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  required
+                  disabled={profileLoading}
                 />
-                <p className="text-xs text-muted-foreground">Email address cannot be changed.</p>
+                {user?.pendingEmail && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 p-3 bg-blue-50 text-blue-900 rounded-md border border-blue-200">
+                    <div className="flex items-center gap-2 flex-1">
+                      <Clock className="h-4 w-4 text-blue-600 shrink-0" />
+                      <span className="text-xs font-medium">Pending verification: {user.pendingEmail}</span>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleResendChange}
+                      disabled={resendChangeLoading}
+                      className="shrink-0 h-8 text-xs bg-blue-100 hover:bg-blue-200 hover:text-blue-900 border-blue-300 text-blue-900"
+                    >
+                      {resendChangeLoading ? "Sending..." : "Resend Email"}
+                    </Button>
+                  </div>
+                )}
+                
+                {!user?.isEmailVerified && !user?.pendingEmail ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 p-3 bg-amber-50 text-amber-900 rounded-md border border-amber-200">
+                    <div className="flex items-center gap-2 flex-1">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                      <span className="text-xs font-medium">Your email is not verified.</span>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleResend}
+                      disabled={resendLoading}
+                      className="shrink-0 h-8 text-xs bg-amber-100 hover:bg-amber-200 hover:text-amber-900 border-amber-300 text-amber-900"
+                    >
+                      {resendLoading ? "Sending..." : "Resend Email"}
+                    </Button>
+                  </div>
+                ) : !user?.pendingEmail ? (
+                  <p className="text-xs text-muted-foreground">Changing your email requires verification.</p>
+                ) : null}
               </div>
 
               <Button type="submit" disabled={profileLoading} className="w-full">

@@ -10,6 +10,9 @@ const errorMiddleware=(err,req,res,next)=>{
         if(err.errors){
             response.errors=err.errors
         }
+        if(err.errorCode){
+            response.errorCode=err.errorCode
+        }
         return res.status(err.statusCode).json(response)
     }
     if(err.code===11000){

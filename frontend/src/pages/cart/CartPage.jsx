@@ -114,7 +114,7 @@ export default function CartPage() {
               <Link to={`/products/${item.product._id}`} className="shrink-0">
                 <div className="h-24 w-24 overflow-hidden rounded-xl bg-muted">
                   <img
-                    src={item.product.images?.[0] || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"}
+                    src={item.product.images?.[0]?.url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"}
                     alt={item.product.name}
                     className="h-full w-full object-cover"
                   />

@@ -1,5 +1,5 @@
-const ReservationModel = require("../models/Reservation")
-const { processExpiredReservation } = require("../services/reservationExpiryService")
+const ReservationModel = require("../../models/Reservation")
+const { processExpiredReservation } = require("../../services/reservationExpiryService")
 
 const GRACE_PERIOD_MS = 2*60* 1000
 const BATCH_SIZE = 50

@@ -1,4 +1,5 @@
 const OrderModel = require("../../models/Order")
+const { generateInvoicePDF } = require("../../utils/pdfGenerator")
 const ProductModel = require("../../models/Product")
 const CartModel = require("../../models/Cart")
 const AddressModel = require("../../models/Address")
@@ -9,28 +10,45 @@ const { buildOrderQuery } = require("../../utils/orderQuery.util")
 const { createOrder, getOrderItems, getShippingAddress, clearCart, validateProducts, generateOrderNumber } = require("./orderHelper")
 const { reduceStock, restoreStock } = require("../inventoryService")
 const { cancelOrder: performCancelOrder } = require("../cancellationService")
+const invoiceQueue = require("../../jobs/invoice/invoiceQueue")
 
 const placeOrder = async (orderData, userData) => {
+
     if (orderData.paymentMethod !== "COD") {
         throw new ApiError(
             400,
             "Online orders must be created through the payment flow"
-        )
+        );
     }
 
-    const orderItems = await getOrderItems(orderData, userData)
-    const address = await getShippingAddress(orderData.addressId, userData)
-    const { orderProductSnapshot, totalPrice } = await validateProducts(orderItems)
-    const orderNumber = generateOrderNumber()
+    const orderItems = await getOrderItems(orderData, userData);
 
-    const session = await mongoose.startSession()
+    const address = await getShippingAddress(
+        orderData.addressId,
+        userData
+    );
+
+    const {
+        orderProductSnapshot,
+        totalPrice
+    } = await validateProducts(orderItems);
+
+    const orderNumber = generateOrderNumber();
+
+    const session = await mongoose.startSession();
+
+    let newOrder;
 
     try {
-        session.startTransaction()
 
-        await reduceStock(orderProductSnapshot, session)
+        session.startTransaction();
 
-        const newOrder = await createOrder(
+        await reduceStock(
+            orderProductSnapshot,
+            session
+        );
+
+        newOrder = await createOrder(
             orderNumber,
             userData,
             address,
@@ -38,22 +56,49 @@ const placeOrder = async (orderData, userData) => {
             totalPrice,
             "COD",
             session
-        )
+        );
 
         if (orderData.source === "CART") {
-            await clearCart(userData, session)
+            await clearCart(
+                userData,
+                session
+            );
         }
 
-        await session.commitTransaction()
+        await session.commitTransaction();
 
-        return newOrder
     } catch (error) {
-        await session.abortTransaction()
-        throw error
+
+        await session.abortTransaction();
+        throw error;
+
     } finally {
-        await session.endSession()
+
+        await session.endSession();
+
     }
-}
+
+    try {
+
+        await invoiceQueue.add(
+            "generate-invoice",
+            {
+                orderId: newOrder._id
+            }
+        );
+
+    } catch (err) {
+
+        console.error(
+            "Failed to queue invoice generation:",
+            err.message
+        );
+
+    }
+
+    return newOrder;
+
+};
 
 const getMyOrders = async (userData) => {
     const orders = await OrderModel.find({
@@ -67,7 +112,10 @@ const getMyOrders = async (userData) => {
     return orders
 }
 const getOrderById = async (orderId, userData) => {
-    const order = await OrderModel.findOne({ _id: orderId, user: userData._id })
+    const order = await OrderModel.findOne({ _id: orderId, user: userData._id }).populate({
+        path: "items.product",
+        select: "name images"
+    })
     if (!order) {
         throw new ApiError(404, "Order not found")
     }
@@ -251,7 +299,24 @@ const getSellerOrders = async (sellerId, query = {}) => {
         pagination
     };
 }
+const downloadInvoice = async (orderId, user) => {
 
+    const order = await OrderModel.findOne({
+        _id: orderId,
+        user: user._id
+    }).populate("user", "name email phone");
+
+    if (!order) {
+        throw new ApiError(404, "Order not found");
+    }
+
+    const pdfBuffer = await generateInvoicePDF(order);
+
+    return {
+        pdfBuffer,
+        orderNumber: order.orderNumber
+    };
+};
 module.exports = {
     placeOrder,
     getMyOrders,
@@ -259,5 +324,6 @@ module.exports = {
     cancelOrder,
     getAllOrders,
     updateOrderStatus,
-    getSellerOrders
+    getSellerOrders,
+    downloadInvoice
 }
