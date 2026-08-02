@@ -180,7 +180,15 @@ const getDashboardStats = async (sellerId) => {
 const getSellerProducts = async (sellerId, query = {}) => {
     const { page, limit, skip } = getPagination(query);
 
+    const { search } = query;
     const filter = { seller: sellerId };
+
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { brand: { $regex: search, $options: "i" } }
+        ];
+    }
 
     const products = await ProductModel.find(filter)
         .sort({ createdAt: -1 })

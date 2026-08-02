@@ -118,9 +118,23 @@ const ApiError = require("../utils/ApiErrors")
 
 const getAllUsers = async (query = {}) => {
     const { page, limit, skip } = getPagination(query);
+    const { search, role } = query;
 
-    const users = await UserModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
-    const totalUsers = await UserModel.countDocuments();
+    const filter = {};
+
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } }
+        ];
+    }
+
+    if (role && role !== "ALL") {
+        filter.role = role;
+    }
+
+    const users = await UserModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const totalUsers = await UserModel.countDocuments(filter);
     const pagination = buildPagination(page, limit, totalUsers);
 
     return {

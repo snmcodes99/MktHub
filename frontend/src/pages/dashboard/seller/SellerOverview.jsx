@@ -210,18 +210,18 @@ export default function SellerOverview() {
           </CardHeader>
           <CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
+              <thead className="text-sm font-medium text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">Order ID</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3 text-right">Status</th>
+                  <th className="px-4 py-3 font-medium">Order ID</th>
+                  <th className="px-4 py-3 font-medium">Customer</th>
+                  <th className="px-4 py-3 font-medium">Amount</th>
+                  <th className="px-4 py-3 font-medium text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody>
                 {d.recentOrders?.length > 0 ? (
                   d.recentOrders.slice(0, 4).map((order) => (
-                    <tr key={order._id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={order._id}>
                       <td className="px-4 py-3 font-semibold text-muted-foreground">{order.orderNumber || `#${order._id?.substring(0,8).toUpperCase()}`}</td>
                       <td className="px-4 py-3 font-medium text-foreground">{order.customerName || "Customer"}</td>
                       <td className="px-4 py-3 font-bold text-foreground">{formatPrice(order.totalPrice)}</td>

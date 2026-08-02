@@ -31,14 +31,15 @@ export default function SellerOrders() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("ALL")
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const queryClient = useQueryClient()
 
-  useEffect(() => { setPage(1) }, [searchTerm, statusFilter])
+  useEffect(() => { setPage(1) }, [searchTerm, statusFilter, limit])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["seller-orders", { page, searchTerm, statusFilter }],
+    queryKey: ["seller-orders", { page, limit, searchTerm, statusFilter }],
     queryFn: () => getSellerOrders({
-      page, limit: 10,
+      page, limit,
       orderNumber: searchTerm || undefined,
       orderStatus: statusFilter !== "ALL" ? statusFilter : undefined
     }),
@@ -69,28 +70,22 @@ export default function SellerOrders() {
   const processingCount = orders.filter(o => o.orderStatus === "PROCESSING" || o.orderStatus === "SHIPPED" || o.orderStatus === "OUT_FOR_DELIVERY").length
   const deliveredCount = orders.filter(o => o.orderStatus === "DELIVERED").length
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+
 
   return (
     <div className="space-y-5">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Manage Orders</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Update fulfillment status of orders containing your products.</p>
+          <h2 className="text-2xl font-black text-foreground tracking-tight">Manage Orders</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Update fulfillment status of orders containing your products.</p>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by Order ID..."
-            className="pl-9 bg-white border-slate-200 rounded-xl text-sm h-9"
+            className="pl-9 bg-card border-border rounded-xl text-sm h-10 shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -98,19 +93,21 @@ export default function SellerOrders() {
       </div>
 
       {/* Summary Chips */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "New / Placed", count: pendingCount, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
-          { label: "In Transit",   count: processingCount, icon: Truck, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200" },
-          { label: "Delivered",    count: deliveredCount,  icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
+          { label: "New / Placed", count: pendingCount, icon: Clock, color: "text-amber-500", iconBg: "bg-amber-500/10" },
+          { label: "In Transit",   count: processingCount, icon: Truck, color: "text-indigo-500", iconBg: "bg-indigo-500/10" },
+          { label: "Delivered",    count: deliveredCount,  icon: CheckCircle2, color: "text-emerald-500", iconBg: "bg-emerald-500/10" },
         ].map((stat) => {
           const Icon = stat.icon
           return (
-            <div key={stat.label} className={`flex items-center gap-3 rounded-xl border ${stat.border} ${stat.bg} px-4 py-3`}>
-              <Icon className={`h-5 w-5 shrink-0 ${stat.color}`} />
+            <div key={stat.label} className="flex items-center gap-4 bg-card border border-border rounded-xl shadow-sm px-5 py-4">
+              <div className={`h-11 w-11 rounded-full flex items-center justify-center ${stat.iconBg}`}>
+                <Icon className={`h-5 w-5 ${stat.color}`} />
+              </div>
               <div>
-                <p className={`text-xl font-bold ${stat.color}`}>{stat.count}</p>
-                <p className="text-xs text-slate-500">{stat.label}</p>
+                <p className="text-2xl font-black text-foreground">{stat.count}</p>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
               </div>
             </div>
           )
@@ -125,8 +122,8 @@ export default function SellerOrders() {
             onClick={() => setStatusFilter(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${
               statusFilter === tab.id
-                ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                : "bg-card text-muted-foreground border-border hover:bg-muted"
             }`}
           >
             <span className={`h-2 w-2 rounded-full ${tab.dot} ${statusFilter === tab.id ? "opacity-70" : ""}`} />
@@ -137,7 +134,11 @@ export default function SellerOrders() {
 
       {/* Table Card */}
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        {orders.length === 0 ? (
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex h-64 flex-col items-center justify-center text-center">
             <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-3">
               <ShoppingBag className="h-7 w-7 text-muted-foreground" />
@@ -149,26 +150,27 @@ export default function SellerOrders() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Order</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Items</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Amount</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Status</th>
+                <tr>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground">Order</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground">Date</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground">Customer</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-center">Items</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-right">Amount</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody>
                 {orders.map((order) => {
                   const meta = STATUS_META[order.orderStatus] || STATUS_META.PENDING
                   const availableStatuses = getAvailableStatuses(order.orderStatus)
                   const isFinal = order.orderStatus === "CANCELLED" || order.orderStatus === "RETURNED" || order.orderStatus === "DELIVERED"
 
                   return (
-                    <tr key={order._id} className="hover:bg-muted/40 transition-colors">
+                    <tr key={order._id}>
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-foreground text-sm">{order.orderNumber}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 font-mono">#{order._id?.slice(-8).toUpperCase()}</p>
+                        <span className="font-mono font-semibold text-sm text-foreground">
+                          {order.orderNumber || `#${order._id?.slice(-8).toUpperCase()}`}
+                        </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-foreground">{formatDate(order.createdAt)}</td>
                       <td className="px-5 py-4">
@@ -217,9 +219,18 @@ export default function SellerOrders() {
           </div>
         )}
 
-        {totalPages > 1 && (
+        {totalPages > 0 && (
           <div className="border-t border-border px-5 py-3">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+            <Pagination 
+              currentPage={page} 
+              totalPages={totalPages} 
+              onPageChange={setPage} 
+              limit={limit}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit)
+                setPage(1)
+              }}
+            />
           </div>
         )}
       </div>

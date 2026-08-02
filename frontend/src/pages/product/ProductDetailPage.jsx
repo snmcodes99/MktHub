@@ -224,7 +224,7 @@ export default function ProductDetailPage() {
 
           {/* ── RIGHT: Action Card (3 Cols) ── */}
           <div className="lg:col-span-3 xl:col-span-3">
-            <div className="border border-border rounded-2xl p-5 shadow-sm sticky top-24 bg-card">
+            <div className="border border-border rounded-2xl p-5 shadow-sm bg-card">
               
               {/* Discount Badge */}
               {discount > 0 && (
@@ -246,32 +246,7 @@ export default function ProductDetailPage() {
               </div>
               <p className="text-[11px] text-muted-foreground font-medium">Inclusive of all taxes</p>
 
-              <Separator className="my-5" />
 
-              {/* Delivery Guarantees */}
-              <div className="space-y-4 mb-6">
-                <div className="flex gap-3">
-                  <Truck className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground leading-none mb-1">Free Delivery</p>
-                    <p className="text-[11px] text-muted-foreground">By Tomorrow, 10 PM</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <RefreshCw className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground leading-none mb-1">7 Days Return</p>
-                    <p className="text-[11px] text-muted-foreground">Easy Returns & Exchanges</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground leading-none mb-1">1 Year Warranty</p>
-                    <p className="text-[11px] text-muted-foreground">Brand Warranty included</p>
-                  </div>
-                </div>
-              </div>
 
               {/* Quantity Selector */}
               <div className="flex items-center gap-4 mb-6">
@@ -334,20 +309,10 @@ export default function ProductDetailPage() {
             {/* Sold By Mini Card below */}
             <div className="mt-4 border border-border rounded-xl p-4 bg-muted/40">
               <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mb-2">Sold By</p>
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-bold text-foreground">{product.seller?.name || "RetailNet"}</p>
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-foreground">{product.seller?.name || "MarketHub Seller"}</p>
                 <div className="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-400 px-2 py-0.5 rounded-full">
                   <BadgeCheck className="h-3 w-3" /> Verified
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-center text-xs divide-x divide-border">
-                <div>
-                  <p className="font-bold text-foreground">98%</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Positive Ratings</p>
-                </div>
-                <div>
-                  <p className="font-bold text-foreground">500+</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Products</p>
                 </div>
               </div>
             </div>

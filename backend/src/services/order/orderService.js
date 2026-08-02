@@ -100,16 +100,20 @@ const placeOrder = async (orderData, userData) => {
 
 };
 
-const getMyOrders = async (userData) => {
-    const orders = await OrderModel.find({
-        user: userData._id
-    }).populate({
-        path: "items.product",
-        select: "name images"
-    }).sort({
-        createdAt: -1
-    })
-    return orders
+const getMyOrders = async (userData, query = {}) => {
+    const { page, limit, skip } = getPagination(query)
+    const filter = { user: userData._id }
+    const [orders, totalItems] = await Promise.all([
+        OrderModel.find(filter).populate({
+            path: "items.product",
+            select: "name images"
+        }).sort({
+            createdAt: -1
+        }).skip(skip).limit(limit),
+        OrderModel.countDocuments(filter)
+    ])
+    const pagination = buildPagination(page, limit, totalItems)
+    return { orders, pagination }
 }
 const getOrderById = async (orderId, userData) => {
     const order = await OrderModel.findOne({ _id: orderId, user: userData._id }).populate({

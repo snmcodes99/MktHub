@@ -11,12 +11,13 @@ import { toast } from "sonner"
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [deleteModal, setDeleteModal] = useState(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["all-products-admin", page],
-    queryFn: () => getProducts({ limit: 10, page, showInactive: "true" }),
+    queryKey: ["all-products-admin", page, limit, searchTerm],
+    queryFn: () => getProducts({ limit, page, search: searchTerm, showInactive: "true" }),
   })
 
   const deleteMutation = useMutation({
@@ -30,11 +31,6 @@ export default function AdminProducts() {
   })
 
   const products = data?.data?.data?.products || []
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.seller?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   if (isLoading) {
     return (
@@ -66,7 +62,7 @@ export default function AdminProducts() {
 
       {/* Table Card */}
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
           <div className="flex h-64 flex-col items-center justify-center text-center">
             <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-3">
               <Package className="h-7 w-7 text-muted-foreground" />
@@ -78,19 +74,19 @@ export default function AdminProducts() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Product</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Seller</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Price</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Stock</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Status</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+                <tr>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground">Product</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground">Seller</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground">Category</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-right">Price</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-center">Stock</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-center">Status</th>
+                  <th className="px-5 py-3 text-sm font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {filteredProducts.map((product) => (
-                  <tr key={product._id} className="hover:bg-muted/40 transition-colors">
+              <tbody>
+                {products.map((product) => (
+                  <tr key={product._id}>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-11 w-11 rounded-xl border border-border bg-muted overflow-hidden flex items-center justify-center shrink-0">
@@ -131,22 +127,22 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-5 py-4 text-center">
                       {product.stock === 0 ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 text-xs font-semibold">
                           <AlertTriangle className="h-3 w-3" /> 0
                         </span>
                       ) : (
-                        <span className="inline-flex items-center justify-center h-6 min-w-[28px] px-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+                        <span className="inline-flex items-center justify-center h-6 min-w-[28px] px-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
                           {product.stock}
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-4 text-center">
                       {product.isActive ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 text-xs font-semibold">
                           <CheckCircle className="h-3 w-3" /> Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700 text-xs font-semibold">
                           Inactive
                         </span>
                       )}
@@ -167,12 +163,17 @@ export default function AdminProducts() {
           </div>
         )}
 
-        {data?.data?.pagination && (
+        {data?.data?.data?.pagination && (
           <div className="border-t border-border px-5 py-3">
             <Pagination
               currentPage={page}
-              totalPages={data.data.pagination.totalPages}
+              totalPages={data.data.data.pagination.totalPages}
               onPageChange={setPage}
+              limit={limit}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit)
+                setPage(1)
+              }}
             />
           </div>
         )}

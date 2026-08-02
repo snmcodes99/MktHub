@@ -21,13 +21,14 @@ export default function AdminCategories() {
   const [newCategoryName, setNewCategoryName] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [editModal, setEditModal] = useState(null) // { _id, name }
   const [editName, setEditName] = useState("")
   const [deleteModal, setDeleteModal] = useState(null) // { _id, name }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["categories", page],
-    queryFn: () => getCategories({ limit: 10, page }),
+    queryKey: ["categories", page, limit, searchTerm],
+    queryFn: () => getCategories({ limit, page, search: searchTerm }),
   })
 
   const createMutation = useMutation({
@@ -66,11 +67,7 @@ export default function AdminCategories() {
     }
   })
 
-  const categories = data?.data?.data || []
-  
-  const filteredCategories = categories.filter(category => 
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const categories = data?.data?.data?.categories || data?.data?.data || []
 
   const handleCreate = (e) => {
     e.preventDefault()
@@ -92,13 +89,7 @@ export default function AdminCategories() {
     updateMutation.mutate({ id: editModal._id, name: editName })
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+
 
   return (
     <div className="space-y-6">
@@ -142,7 +133,11 @@ export default function AdminCategories() {
 
       <Card>
         <CardContent className="p-0">
-          {filteredCategories.length === 0 ? (
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : categories.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center text-center border-dashed">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <FolderTree className="h-8 w-8 text-muted-foreground" />
@@ -160,7 +155,7 @@ export default function AdminCategories() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategories.map((category) => (
+                {categories.map((category) => (
                   <TableRow key={category._id}>
                     <TableCell className="font-medium">{category.name}</TableCell>
                     <TableCell>{new Date(category.createdAt).toLocaleDateString()}</TableCell>
@@ -192,6 +187,11 @@ export default function AdminCategories() {
             <Pagination 
               currentPage={page} 
               totalPages={data.data.pagination.totalPages} 
+              limit={limit}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit)
+                setPage(1)
+              }}
               onPageChange={setPage} 
             />
           )}

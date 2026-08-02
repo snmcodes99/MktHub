@@ -32,6 +32,7 @@ export default function AdminSellerRequests() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("PENDING")
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [approveModalOpen, setApproveModalOpen] = useState(false)
   const [targetReq, setTargetReq] = useState(null)
@@ -40,8 +41,8 @@ export default function AdminSellerRequests() {
   const queryClient = useQueryClient()
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["seller-requests", page],
-    queryFn: () => getAllSellerRequests({ limit: 10, page }),
+    queryKey: ["seller-requests", page, limit, searchTerm, statusFilter],
+    queryFn: () => getAllSellerRequests({ limit, page, search: searchTerm, status: statusFilter !== "ALL" ? statusFilter : undefined }),
   })
 
   const approveMutation = useMutation({
@@ -50,7 +51,7 @@ export default function AdminSellerRequests() {
       toast.success("Seller approved successfully!")
       setApproveModalOpen(false)
       setTargetReq(null)
-      queryClient.invalidateQueries({ queryKey: ["all-seller-requests"] })
+      queryClient.invalidateQueries({ queryKey: ["seller-requests"] })
     },
     onError: (e) => toast.error(e?.response?.data?.message || "Failed to approve seller"),
   })
@@ -62,36 +63,14 @@ export default function AdminSellerRequests() {
       setRejectModalOpen(false)
       setTargetReq(null)
       setRejectReason("")
-      queryClient.invalidateQueries({ queryKey: ["all-seller-requests"] })
+      queryClient.invalidateQueries({ queryKey: ["seller-requests"] })
     },
     onError: (e) => toast.error(e?.response?.data?.message || "Failed to reject"),
   })
 
-  const allRequests = data?.data?.data?.sellerRequests || []
-  const requests = Array.isArray(allRequests) ? allRequests : []
+  const requests = data?.data?.data?.sellerRequests || []
 
-  const counts = {
-    ALL: requests.length,
-    PENDING: requests.filter(r => r.status === "PENDING").length,
-    APPROVED: requests.filter(r => r.status === "APPROVED").length,
-    REJECTED: requests.filter(r => r.status === "REJECTED").length,
-  }
 
-  const filtered = requests.filter(req => {
-    const q = searchTerm.toLowerCase().trim()
-    const matchSearch = !q ||
-      req.shopName?.toLowerCase().includes(q) ||
-      req.user?.email?.toLowerCase().includes(q) ||
-      req.user?.name?.toLowerCase().includes(q)
-    const matchStatus = statusFilter === "ALL" || req.status === statusFilter
-    return matchSearch && matchStatus
-  })
-
-  if (isLoading) return (
-    <div className="flex h-64 items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-  )
 
   if (isError) return (
     <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
@@ -105,24 +84,13 @@ export default function AdminSellerRequests() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-6 text-white shadow-lg">
-        <div className="absolute inset-0 opacity-10" style={{backgroundImage:"radial-gradient(circle at 80% 50%, white 0%, transparent 60%)"}} />
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <p className="text-amber-100 text-xs font-semibold uppercase tracking-widest mb-1">Admin Panel</p>
-            <h1 className="text-2xl font-bold">Seller Applications</h1>
-            <p className="text-amber-100 text-sm mt-1">Review and manage seller applications</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
+        <div>
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-semibold uppercase tracking-wider mb-3">
+            <ShieldCheck className="h-3.5 w-3.5" /> Admin Panel
           </div>
-          <div className="flex gap-3">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 text-center">
-              <p className="text-2xl font-black">{counts.PENDING}</p>
-              <p className="text-amber-100 text-xs font-semibold">Pending</p>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 text-center">
-              <p className="text-2xl font-black">{counts.APPROVED}</p>
-              <p className="text-amber-100 text-xs font-semibold">Approved</p>
-            </div>
-          </div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Seller Applications</h1>
+          <p className="text-muted-foreground text-sm mt-2">Review and manage incoming marketplace seller applications.</p>
         </div>
       </div>
 
@@ -134,19 +102,19 @@ export default function AdminSellerRequests() {
             placeholder="Search by shop, name or email..."
             className="pl-9"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {setSearchTerm(e.target.value); setPage(1)}}
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {[
-            { key: "ALL", label: "All", count: counts.ALL },
-            { key: "PENDING", label: "Pending", count: counts.PENDING },
-            { key: "APPROVED", label: "Approved", count: counts.APPROVED },
-            { key: "REJECTED", label: "Rejected", count: counts.REJECTED },
+            { key: "ALL", label: "All" },
+            { key: "PENDING", label: "Pending" },
+            { key: "APPROVED", label: "Approved" },
+            { key: "REJECTED", label: "Rejected" },
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setStatusFilter(tab.key)}
+              onClick={() => {setStatusFilter(tab.key); setPage(1)}}
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                 statusFilter === tab.key
                   ? "bg-primary text-primary-foreground border-primary shadow-sm"
@@ -154,16 +122,17 @@ export default function AdminSellerRequests() {
               }`}
             >
               {tab.label}
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${statusFilter === tab.key ? "bg-white/25" : "bg-muted"}`}>
-                {tab.count}
-              </span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Cards Grid */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center bg-card rounded-2xl border">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : requests.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-20 text-center">
             <div className="h-16 w-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
@@ -171,15 +140,13 @@ export default function AdminSellerRequests() {
             </div>
             <h3 className="text-lg font-bold">No applications found</h3>
             <p className="text-muted-foreground text-sm mt-1 max-w-xs">
-              {requests.length === 0
-                ? "No seller applications have been submitted yet."
-                : "Try adjusting your search or filter."}
+              Try adjusting your search or filter.
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {filtered.map(req => (
+          {requests.map(req => (
             <div key={req._id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-background border rounded-xl shadow-sm hover:shadow-md transition-all gap-4 relative overflow-hidden ${req.status === "PENDING" ? "border-amber-200" : req.status === "APPROVED" ? "border-emerald-200" : "border-border"}`}>
               {/* Accent line */}
               <div className={`absolute left-0 top-0 bottom-0 w-1 ${req.status === "PENDING" ? "bg-gradient-to-b from-amber-400 to-orange-500" : req.status === "APPROVED" ? "bg-gradient-to-b from-emerald-400 to-teal-500" : "bg-gradient-to-b from-red-400 to-rose-500"}`} />
@@ -212,11 +179,16 @@ export default function AdminSellerRequests() {
         </div>
       )}
 
-      {data?.data?.pagination && (
+      {data?.data?.data?.pagination && (
         <Pagination 
           currentPage={page} 
-          totalPages={data.data.pagination.totalPages} 
+          totalPages={data.data.data.pagination.totalPages} 
           onPageChange={setPage} 
+          limit={limit}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit)
+            setPage(1)
+          }}
         />
       )}
 

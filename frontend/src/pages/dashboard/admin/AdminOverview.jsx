@@ -142,17 +142,17 @@ export default function AdminOverview() {
           </CardHeader>
           <CardContent className="space-y-3">
             {[
-              { label: "Pending", value: stats.pendingOrders || 0, color: "bg-amber-400", text: "text-amber-700", bg: "bg-amber-50" },
-              { label: "Processing", value: stats.processingOrders || 0, color: "bg-blue-400", text: "text-blue-700", bg: "bg-blue-50" },
-              { label: "Delivered", value: stats.deliveredOrders || 0, color: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50" },
-              { label: "Cancelled", value: stats.cancelledOrders || 0, color: "bg-red-400", text: "text-red-700", bg: "bg-red-50" },
+              { label: "Pending", value: stats.pendingOrders || 0, color: "bg-amber-500" },
+              { label: "Processing", value: stats.processingOrders || 0, color: "bg-blue-500" },
+              { label: "Delivered", value: stats.deliveredOrders || 0, color: "bg-emerald-500" },
+              { label: "Cancelled", value: stats.cancelledOrders || 0, color: "bg-red-500" },
             ].map(item => (
-              <div key={item.label} className={`flex items-center justify-between px-3 py-2.5 rounded-xl ${item.bg}`}>
-                <div className="flex items-center gap-2">
-                  <div className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
-                  <span className={`text-sm font-semibold ${item.text}`}>{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2.5 w-2.5 rounded-full ${item.color} shadow-sm`} />
+                  <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
                 </div>
-                <span className={`text-base font-extrabold ${item.text}`}>{item.value}</span>
+                <span className="text-base font-bold text-foreground">{item.value}</span>
               </div>
             ))}
           </CardContent>
@@ -170,16 +170,16 @@ export default function AdminOverview() {
           </CardHeader>
           <CardContent className="space-y-3">
             {[
-              { label: "Customers", value: stats.totalCustomers || 0, bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-400" },
-              { label: "Sellers", value: stats.totalSellers || 0, bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-400" },
-              { label: "Admins", value: stats.totalAdmins || 0, bg: "bg-pink-50", text: "text-pink-700", dot: "bg-pink-400" },
+              { label: "Customers", value: stats.totalCustomers || 0, dot: "bg-indigo-500" },
+              { label: "Sellers", value: stats.totalSellers || 0, dot: "bg-violet-500" },
+              { label: "Admins", value: stats.totalAdmins || 0, dot: "bg-pink-500" },
             ].map(item => (
-              <div key={item.label} className={`flex items-center justify-between px-3 py-2.5 rounded-xl ${item.bg}`}>
-                <div className="flex items-center gap-2">
-                  <div className={`h-2.5 w-2.5 rounded-full ${item.dot}`} />
-                  <span className={`text-sm font-semibold ${item.text}`}>{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2.5 w-2.5 rounded-full ${item.dot} shadow-sm`} />
+                  <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
                 </div>
-                <span className={`text-base font-extrabold ${item.text}`}>{item.value}</span>
+                <span className="text-base font-bold text-foreground">{item.value}</span>
               </div>
             ))}
           </CardContent>
@@ -193,29 +193,29 @@ export default function AdminOverview() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50 border border-amber-200">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-amber-700" />
+            <div className="flex items-center justify-between py-3 border-b border-border/50">
+              <div className="flex items-center gap-3.5">
+                <div className="h-9 w-9 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-amber-900">Seller Requests</p>
-                  <p className="text-xs text-amber-600">Awaiting approval</p>
+                  <p className="text-sm font-semibold text-foreground">Seller Requests</p>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">Awaiting approval</p>
                 </div>
               </div>
-              <span className="text-2xl font-black text-amber-700">{stats.pendingSellerRequests || 0}</span>
+              <span className="text-lg font-bold text-foreground">{stats.pendingSellerRequests || 0}</span>
             </div>
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-red-50 border border-red-200">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-red-100 flex items-center justify-center">
-                  <XCircle className="h-4 w-4 text-red-700" />
+            <div className="flex items-center justify-between py-3 mb-2">
+              <div className="flex items-center gap-3.5">
+                <div className="h-9 w-9 rounded-full bg-rose-500/10 flex items-center justify-center">
+                  <XCircle className="h-4 w-4 text-rose-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-red-900">Inactive Products</p>
-                  <p className="text-xs text-red-600">Need attention</p>
+                  <p className="text-sm font-semibold text-foreground">Inactive Products</p>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">Need attention</p>
                 </div>
               </div>
-              <span className="text-2xl font-black text-red-700">{stats.inactiveProducts || 0}</span>
+              <span className="text-lg font-bold text-foreground">{stats.inactiveProducts || 0}</span>
             </div>
             <Button className="w-full gap-2 mt-1" variant="outline" asChild>
               <Link to="/admin/requests"><ShieldCheck className="h-4 w-4" />Review Seller Requests</Link>
@@ -229,15 +229,15 @@ export default function AdminOverview() {
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Quick Access</p>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: "Users", icon: <Users className="h-5 w-5" />, to: "/admin/users", c: "text-blue-600", bg: "bg-blue-50 hover:bg-blue-100 border-blue-100" },
-            { label: "Orders", icon: <Package className="h-5 w-5" />, to: "/admin/orders", c: "text-orange-600", bg: "bg-orange-50 hover:bg-orange-100 border-orange-100" },
-            { label: "Products", icon: <ShoppingBag className="h-5 w-5" />, to: "/admin/products", c: "text-purple-600", bg: "bg-purple-50 hover:bg-purple-100 border-purple-100" },
-            { label: "Categories", icon: <ListOrdered className="h-5 w-5" />, to: "/admin/categories", c: "text-teal-600", bg: "bg-teal-50 hover:bg-teal-100 border-teal-100" },
-            { label: "Seller Reqs", icon: <Store className="h-5 w-5" />, to: "/admin/requests", c: "text-rose-600", bg: "bg-rose-50 hover:bg-rose-100 border-rose-100" },
+            { label: "Users", icon: <Users className="h-5 w-5" />, to: "/admin/users", c: "text-blue-500" },
+            { label: "Orders", icon: <Package className="h-5 w-5" />, to: "/admin/orders", c: "text-orange-500" },
+            { label: "Products", icon: <ShoppingBag className="h-5 w-5" />, to: "/admin/products", c: "text-purple-500" },
+            { label: "Categories", icon: <ListOrdered className="h-5 w-5" />, to: "/admin/categories", c: "text-teal-500" },
+            { label: "Seller Reqs", icon: <Store className="h-5 w-5" />, to: "/admin/requests", c: "text-rose-500" },
           ].map((a) => (
-            <Link key={a.label} to={a.to} className={`flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl border transition-all ${a.bg}`}>
-              <div className={`h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center ${a.c}`}>{a.icon}</div>
-              <span className={`text-xs font-bold ${a.c}`}>{a.label}</span>
+            <Link key={a.label} to={a.to} className="group flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-muted/30 transition-all shadow-sm">
+              <div className={`h-10 w-10 rounded-full bg-muted group-hover:bg-background shadow-sm flex items-center justify-center transition-colors ${a.c}`}>{a.icon}</div>
+              <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{a.label}</span>
             </Link>
           ))}
         </div>

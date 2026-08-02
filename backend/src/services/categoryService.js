@@ -23,8 +23,23 @@ const createCategory = async (data) => {
     return newCategory;
 };
 
-const getAllCategories = async () => {
-    return await Category.find({ isActive: true });
+const getAllCategories = async (query = {}) => {
+    const filter = { isActive: true };
+    const { search, limit } = query;
+    
+    if (search) {
+        filter.name = { $regex: search, $options: "i" };
+    }
+
+    if (limit) {
+        const { page, skip } = require("../utils/pagination.utils").getPagination(query);
+        const categories = await Category.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        const totalItems = await Category.countDocuments(filter);
+        const pagination = require("../utils/pagination.utils").buildPagination(page, limit, totalItems);
+        return { categories, pagination };
+    }
+
+    return await Category.find(filter).sort({ createdAt: -1 });
 };
 
 const updateCategory = async (id, data) => {

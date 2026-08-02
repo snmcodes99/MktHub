@@ -12,7 +12,7 @@ const placeOrder = async (req, res) => {
 }
 
 const getMyOrders = async (req, res) => {
-    const orders = await orderService.getMyOrders(req.user)
+    const orders = await orderService.getMyOrders(req.user, req.query)
     res.status(200).json({
         success: true,
         message: "Orders fetched successfully",

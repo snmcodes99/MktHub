@@ -9,11 +9,11 @@ const createCategory=async(req,res)=>{
     })
 }
 const getAllCategories = async (req, res) => {
-  const categories=await categoryService.getAllCategories();
+  const result = await categoryService.getAllCategories(req.query);
   res.status(200).json({
     success:true,
     message:"all categories",
-    data:categories,
+    data: result.categories ? result : result,
   });
 };
 

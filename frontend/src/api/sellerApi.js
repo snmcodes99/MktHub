@@ -11,3 +11,5 @@ export const approveSellerRequest = (id) => axiosClient.patch(`/seller-request/$
 export const rejectSellerRequest = (id, data) => axiosClient.patch(`/seller-request/${id}/reject`, data)
 
 export const getDashboardStats = () => axiosClient.get("/seller/dashboard")
+
+export const getSellerProducts = (params) => axiosClient.get("/seller/products", { params })

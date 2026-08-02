@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus, Edit2, Trash2, Package, Loader2, Image as ImageIcon, Search, X, Check, XCircle, AlertCircle } from "lucide-react"
-import { getProducts, deleteProduct, createProduct, updateProduct, toggleProductActive } from "@/api/productApi"
+import { deleteProduct, createProduct, updateProduct, toggleProductActive } from "@/api/productApi"
+import { getSellerProducts } from "@/api/sellerApi"
 import { getCategories } from "@/api/categoryApi"
 import { useAuth } from "@/hooks/useAuth"
 import { Card, CardContent } from "@/components/ui/card"
@@ -22,6 +23,7 @@ import { toast } from "sonner"
 export default function SellerProducts() {
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModal, setDeleteModal] = useState(null)
@@ -45,8 +47,8 @@ export default function SellerProducts() {
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["products", page],
-    queryFn: () => getProducts({ limit: 10, page, showInactive: "true" }),
+    queryKey: ["products", page, limit, searchTerm],
+    queryFn: () => getSellerProducts({ limit, page, search: searchTerm }),
   })
 
   const { data: categoryData } = useQuery({
@@ -171,13 +173,7 @@ export default function SellerProducts() {
     setEditModalOpen(true)
   }
 
-  const allProducts = data?.data?.data?.products || []
-  const myProducts = allProducts.filter(product => product.seller?._id === user?._id || product.seller === user?._id)
-  
-  const filteredProducts = myProducts.filter(product => 
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const products = data?.data?.data?.products || []
   const categories = categoryData?.data?.data || []
 
   if (isLoading) {
@@ -217,7 +213,7 @@ export default function SellerProducts() {
 
       <Card>
         <CardContent className="p-0">
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center text-center">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Package className="h-8 w-8 text-muted-foreground" />
@@ -239,7 +235,7 @@ export default function SellerProducts() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <TableRow key={product._id} className={!product.isActive ? "opacity-60" : ""}>
                     <TableCell>
                       <div className="h-12 w-12 overflow-hidden rounded-md border bg-muted flex items-center justify-center">
@@ -304,11 +300,16 @@ export default function SellerProducts() {
               </TableBody>
             </Table>
           )}
-          {data?.data?.pagination && (
+          {data?.data?.data?.pagination && (
             <Pagination 
               currentPage={page} 
-              totalPages={data.data.pagination.totalPages} 
+              totalPages={data.data.data.pagination.totalPages} 
               onPageChange={setPage} 
+              limit={limit}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit)
+                setPage(1)
+              }}
             />
           )}
         </CardContent>

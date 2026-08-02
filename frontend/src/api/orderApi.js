@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient"
 
 export const placeOrder = (data) => axiosClient.post("/order", data)
 
-export const getMyOrders = () => axiosClient.get("/order/my-orders")
+export const getMyOrders = (params) => axiosClient.get("/order/my-orders", { params })
 
 export const getOrderById = (id) => axiosClient.get(`/order/${id}`)
 

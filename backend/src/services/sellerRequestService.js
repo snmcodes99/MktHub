@@ -31,15 +31,26 @@ const getMySellerRequests = async (userData) => {
 
 const getAllSellerRequests = async (query = {}) => {
     const { page, limit, skip } = getPagination(query);
+    const { search, status } = query;
 
-    const sellerRequests = await sellerRequestModel.find()
+    const filter = {};
+
+    if (search) {
+        filter.shopName = { $regex: search, $options: "i" };
+    }
+
+    if (status && status !== "ALL") {
+        filter.status = status;
+    }
+
+    const sellerRequests = await sellerRequestModel.find(filter)
         .sort({ createdAt: 1 })
         .skip(skip)
         .limit(limit)
         .populate("user", "name email")
         .populate("reviewedBy", "name")
 
-    const totalRequests = await sellerRequestModel.countDocuments();
+    const totalRequests = await sellerRequestModel.countDocuments(filter);
     const pagination = buildPagination(page, limit, totalRequests);
 
     return {

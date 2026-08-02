@@ -21,6 +21,7 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("ALL")
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [banModalOpen, setBanModalOpen] = useState(false)
   const [banTargetUser, setBanTargetUser] = useState(null)
   const [roleModalOpen, setRoleModalOpen] = useState(false)
@@ -30,8 +31,8 @@ export default function AdminUsers() {
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-users", page],
-    queryFn: () => getAllUsers({ limit: 10, page }),
+    queryKey: ["admin-users", page, limit, searchTerm, roleFilter],
+    queryFn: () => getAllUsers({ limit, page, search: searchTerm, role: roleFilter !== "ALL" ? roleFilter : undefined }),
   })
 
   const banMutation = useMutation({
@@ -87,25 +88,11 @@ export default function AdminUsers() {
 
   const rawData = data?.data?.data
   const users = Array.isArray(rawData) ? rawData : (rawData?.users ?? [])
-  
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = roleFilter === "ALL" || user.role === roleFilter
-    return matchesSearch && matchesRole
-  })
 
   const roleColors = {
     ADMIN: "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400",
     SELLER: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-400",
     CUSTOMER: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400"
-  }
-
-  const totalByRole = {
-    ALL: users.length,
-    CUSTOMER: users.filter(u => u.role === "CUSTOMER").length,
-    SELLER: users.filter(u => u.role === "SELLER").length,
-    ADMIN: users.filter(u => u.role === "ADMIN").length,
   }
 
   return (
@@ -145,9 +132,6 @@ export default function AdminUsers() {
             }`}
           >
             {label}
-            <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${roleFilter === key ? "bg-white/20" : "bg-muted"}`}>
-              {totalByRole[key]}
-            </span>
           </button>
         ))}
       </div>
@@ -158,7 +142,7 @@ export default function AdminUsers() {
             <div className="flex h-64 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : filteredUsers.length === 0 ? (
+          ) : users.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center text-center border-dashed">
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Users className="h-8 w-8 text-muted-foreground" />
@@ -178,7 +162,7 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => {
+                {users.map((user) => {
                   const initials = user.name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?"
                   return (
                     <TableRow key={user._id}>
@@ -253,11 +237,16 @@ export default function AdminUsers() {
               </TableBody>
             </Table>
           )}
-          {data?.data?.pagination && (
+          {data?.data?.data?.pagination && (
             <Pagination 
+              totalPages={data.data.data.pagination.totalPages} 
               currentPage={page} 
-              totalPages={data.data.pagination.totalPages} 
               onPageChange={setPage} 
+              limit={limit}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit)
+                setPage(1)
+              }}
             />
           )}
         </CardContent>

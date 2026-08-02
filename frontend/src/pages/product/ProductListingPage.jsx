@@ -8,11 +8,13 @@ import { getCategories } from "@/api/categoryApi"
 import { ProductCard } from "@/components/product/ProductCard"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Pagination } from "@/components/ui/pagination"
 
 export default function ProductListingPage() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get("search") || ""
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(12)
   const [selectedCategories, setSelectedCategories] = useState([])
   const [minPrice, setMinPrice] = useState("")
   const [maxPrice, setMaxPrice] = useState("")
@@ -21,7 +23,7 @@ export default function ProductListingPage() {
   // Reset page when search or filters change
   useEffect(() => {
     setPage(1)
-  }, [searchQuery, selectedCategories, minPrice, maxPrice, sort])
+  }, [searchQuery, selectedCategories, minPrice, maxPrice, sort, limit])
 
   const handleCategoryChange = (categoryId) => {
     setSelectedCategories(prev => 
@@ -32,11 +34,11 @@ export default function ProductListingPage() {
   }
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", { search: searchQuery, page, selectedCategories, minPrice, maxPrice, sort }],
+    queryKey: ["products", { search: searchQuery, page, limit, selectedCategories, minPrice, maxPrice, sort }],
     queryFn: () => getProducts({ 
         search: searchQuery, 
         page, 
-        limit: 12,
+        limit,
         category: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
         minPrice: minPrice || undefined,
         maxPrice: maxPrice || undefined,
@@ -153,25 +155,19 @@ export default function ProductListingPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-12 flex justify-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </Button>
-                  <div className="flex items-center px-4 font-medium">
-                    Page {page} of {totalPages}
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                  </Button>
+              {totalPages > 0 && (
+                <div className="mt-12">
+                  <Pagination 
+                    currentPage={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    limit={limit}
+                    onLimitChange={(newLimit) => {
+                      setLimit(newLimit)
+                      setPage(1)
+                    }}
+                    limitOptions={[12, 24, 48]}
+                  />
                 </div>
               )}
             </>
