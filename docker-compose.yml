@@ -1,33 +1,47 @@
+version: "3.9"
+
 services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: mkthub-frontend:latest
+    expose:
+      - "80"
+    restart: unless-stopped
+
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: mkthub-backend:latest
-    build: ./backend
-    ports:
-      - "3000:3000"
     env_file:
       - ./backend/.env.docker
+    expose:
+      - "3000"
     depends_on:
       - redis
     restart: unless-stopped
 
-  frontend:
-    image: mkthub-frontend:latest
-    build: ./frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-    restart: unless-stopped
-
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis-data:/data
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: mkthub-nginx:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
     restart: unless-stopped
 
 volumes:

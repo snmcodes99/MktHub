@@ -4,4 +4,3 @@ dist
 .env.local
 .git
 Dockerfile
-nginx.conf
