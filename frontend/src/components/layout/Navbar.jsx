@@ -138,18 +138,10 @@ export function Navbar() {
             )}
 
             {/* Mobile: Sign up pill (only when not logged in) */}
-            {!user ? (
+            {!user && (
               <Button className="md:hidden ml-1 rounded-full h-[30px] px-3.5 text-[11px] font-bold" asChild>
                 <Link to="/register">Sign up</Link>
               </Button>
-            ) : (
-              <button
-                onClick={logout}
-                aria-label="Log out"
-                className="md:hidden ml-0.5 h-8 w-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
-              >
-                <LogOut className="h-[18px] w-[18px]" />
-              </button>
             )}
           </div>
         </div>

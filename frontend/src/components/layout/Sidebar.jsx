@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-import { Package, User as UserIcon, MapPin, Settings, LayoutDashboard, ShoppingBag, Store, Users, BarChart3, ListOrdered } from "lucide-react"
+import { Package, User as UserIcon, MapPin, Settings, LayoutDashboard, ShoppingBag, Store, Users, BarChart3, ListOrdered, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 
 const customerLinks = [
@@ -26,7 +26,7 @@ const adminLinks = [
 ]
 
 export function Sidebar() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   
   if (!user) return null
 
@@ -80,6 +80,15 @@ export function Sidebar() {
           </nav>
         </div>
       ))}
+      <div className="mt-auto px-3 pb-4 pt-6">
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+        >
+          <LogOut className="h-5 w-5" />
+          Log out
+        </button>
+      </div>
     </div>
   )
 }
