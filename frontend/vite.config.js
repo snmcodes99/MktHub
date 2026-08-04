@@ -20,4 +20,17 @@ export default defineConfig(({ command }) => ({
       usePolling: true, // Windows Docker volume hot-reload fix
     },
   } : {},
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+          ui: ['lucide-react', 'framer-motion', 'clsx', 'tailwind-merge'],
+          charts: ['recharts'],
+        },
+      },
+    },
+  }
 }))
