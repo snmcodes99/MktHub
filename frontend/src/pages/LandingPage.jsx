@@ -47,28 +47,28 @@ export default function LandingPage() {
         <div className="relative rounded-2xl md:rounded-[2rem] overflow-hidden border border-border/50 shadow-sm bg-white dark:bg-slate-900">
           
           {/* ── Mobile Hero: 70/30 split like PC ── */}
-          <div className="md:hidden flex items-center min-h-[300px] relative">
+          <div className="md:hidden flex items-center min-h-[340px] relative">
             {/* BG image layer (70/30 split) */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-              <div className="absolute inset-y-0 left-0 w-[40%] bg-white dark:bg-slate-900 z-10" />
-              <div className="absolute inset-y-0 right-0 w-[70%] z-0">
+              <div className="absolute inset-y-0 left-0 w-[45%] bg-white dark:bg-slate-900 z-10" />
+              <div className="absolute inset-y-0 right-0 w-[65%] z-0">
                 <div className="absolute inset-0 bg-[url('/hero-bg-shopping.png')] bg-cover bg-center" />
-                <div className="absolute inset-y-0 left-0 w-[90%] bg-gradient-to-r from-white via-white/80 to-transparent dark:from-slate-900 dark:via-slate-900/80 backdrop-blur-[2px] [mask-image:linear-gradient(to_right,black_30%,transparent_100%)]" />
+                <div className="absolute inset-y-0 left-0 w-[95%] bg-gradient-to-r from-white via-white/85 to-transparent dark:from-slate-900 dark:via-slate-900/85 backdrop-blur-[2px] [mask-image:linear-gradient(to_right,black_30%,transparent_100%)]" />
               </div>
             </div>
 
             {/* Text Overlay */}
             <div className="relative z-10 w-full px-5 py-6">
-              <h1 className="text-[26px] leading-[1.1] font-black text-slate-900 dark:text-white tracking-tight mb-2">
+              <h1 className="text-[32px] leading-[1.05] font-black text-slate-900 dark:text-white tracking-tight mb-3">
                 Welcome to <br/>mkt<span className="text-emerald-500">hub</span>
               </h1>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mb-5 max-w-[200px] font-medium">
+              <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed mb-6 max-w-[220px] font-medium">
                 A full-stack multi-vendor e-commerce platform built for educational purposes. Browse & buy from verified sellers.
               </p>
               
-              <Link to="/products" className="inline-block max-w-[160px] w-full">
-                <Button className="w-full h-10 rounded-full font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition-all duration-300 text-[11px] gap-1.5">
-                  <ShoppingBag className="h-3.5 w-3.5" />
+              <Link to="/products" className="inline-block max-w-[180px] w-full">
+                <Button className="w-full h-11 rounded-full font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition-all duration-300 text-[13px] gap-2">
+                  <ShoppingBag className="h-4 w-4" />
                   Browse Products
                 </Button>
               </Link>
