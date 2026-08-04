@@ -1,6 +1,6 @@
 import { useRef } from "react"
 import { Link } from "react-router-dom"
-import { ChevronRight, ChevronLeft, Loader2, ShoppingBag, ArrowRight, Sparkles, Zap } from "lucide-react"
+import { ChevronRight, ChevronLeft, Loader2, ShoppingBag, ArrowRight, Flame, Tag } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
@@ -161,7 +161,7 @@ export default function LandingPage() {
         <ProductCarousel
           title="Trending Now"
           subtitle="The most loved items this week"
-          icon={<Zap className="w-5 h-5 text-amber-500 fill-amber-500" />}
+          icon={<Flame className="w-5 h-5 text-orange-500" strokeWidth={2.5} />}
           viewAllTo="/products"
           scrollRef={trendingRef}
           onScroll={scroll}
@@ -174,7 +174,7 @@ export default function LandingPage() {
         <ProductCarousel
           title="Fresh Arrivals"
           subtitle="Just landed from our top sellers"
-          icon={<Sparkles className="w-5 h-5 text-indigo-500 fill-indigo-500" />}
+          icon={<Tag className="w-5 h-5 text-emerald-500" strokeWidth={2.5} />}
           viewAllTo="/products?sort=-createdAt"
           scrollRef={newLaunchesRef}
           onScroll={scroll}
