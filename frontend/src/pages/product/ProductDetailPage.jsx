@@ -310,7 +310,7 @@ export default function ProductDetailPage() {
             <div className="mt-4 border border-border rounded-xl p-4 bg-muted/40">
               <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mb-2">Sold By</p>
               <div className="flex items-center justify-between">
-                <p className="font-bold text-foreground">{product.seller?.name || "MarketHub Seller"}</p>
+                <p className="font-bold text-foreground">{product.seller?.name || "mkthub Seller"}</p>
                 <div className="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-400 px-2 py-0.5 rounded-full">
                   <BadgeCheck className="h-3 w-3" /> Verified
                 </div>

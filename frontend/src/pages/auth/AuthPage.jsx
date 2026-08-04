@@ -339,7 +339,7 @@ function MobileRegisterPanel({ onSwitch }) {
     <div className="space-y-5">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Create account</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Join MarketHub and start exploring</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Join mkthub and start exploring</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -462,7 +462,7 @@ function RegisterPanel({ visible, onSwitch }) {
           <Logo size="sm" />
         </div>
         <h2 className="text-xl font-bold text-slate-700 dark:text-slate-300 tracking-tight">Create Account</h2>
-        <p className="text-sm text-slate-400 mt-1">Join MarketHub and start exploring today</p>
+        <p className="text-sm text-slate-400 mt-1">Join mkthub and start exploring today</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
