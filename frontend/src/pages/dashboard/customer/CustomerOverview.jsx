@@ -134,23 +134,23 @@ export default function CustomerOverview() {
       </div>
 
       {/* ── 2. STAT CARDS ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: "Total Orders", value: orders.length, icon: <ShoppingBag className="h-5 w-5 text-blue-500" />, iconBg: "bg-blue-500/10", link: "/dashboard/orders", linkText: "View all orders >" },
-          { label: "To Be Delivered", value: pendingCount, icon: <Truck className="h-5 w-5 text-emerald-500" />, iconBg: "bg-emerald-500/10", link: "/dashboard/orders", linkText: "Track your orders >" },
-          { label: "Completed Orders", value: deliveredCount, icon: <CheckCircle className="h-5 w-5 text-purple-500" />, iconBg: "bg-purple-500/10", link: "/dashboard/orders", linkText: "View history >" },
-          { label: "Total Spent", value: formatPrice(totalSpent), icon: <TrendingUp className="h-5 w-5 text-rose-500" />, iconBg: "bg-rose-500/10", link: "/dashboard/orders", linkText: "View orders >" },
+          { label: "Total Orders", value: orders.length, icon: <ShoppingBag className="h-4 sm:h-5 w-4 sm:w-5 text-blue-500" />, iconBg: "bg-blue-500/10", link: "/dashboard/orders", linkText: "View all orders >" },
+          { label: "To Be Delivered", value: pendingCount, icon: <Truck className="h-4 sm:h-5 w-4 sm:w-5 text-emerald-500" />, iconBg: "bg-emerald-500/10", link: "/dashboard/orders", linkText: "Track your orders >" },
+          { label: "Completed Orders", value: deliveredCount, icon: <CheckCircle className="h-4 sm:h-5 w-4 sm:w-5 text-purple-500" />, iconBg: "bg-purple-500/10", link: "/dashboard/orders", linkText: "View history >" },
+          { label: "Total Spent", value: formatPrice(totalSpent), icon: <TrendingUp className="h-4 sm:h-5 w-4 sm:w-5 text-rose-500" />, iconBg: "bg-rose-500/10", link: "/dashboard/orders", linkText: "View orders >" },
         ].map((s, i) => (
           <Card key={i} className="border-border shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5 flex flex-col items-center text-center">
-              <div className={`h-12 w-12 rounded-full ${s.iconBg} flex items-center justify-center mb-3`}>
+            <CardContent className="p-3 sm:p-5 flex items-center gap-3 sm:gap-4">
+              <div className={`h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full ${s.iconBg} flex items-center justify-center`}>
                 {s.icon}
               </div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{s.label}</p>
-              <p className="text-3xl font-black tracking-tight mb-3 text-foreground">{s.value}</p>
-              <Link to={s.link} className="text-xs font-semibold text-primary hover:underline">
-                {s.linkText}
-              </Link>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5 sm:mb-1 truncate leading-tight">{s.label}</p>
+                <p className="text-lg sm:text-2xl lg:text-3xl font-black tracking-tight mb-0.5 sm:mb-1 text-foreground truncate">{s.value}</p>
+                <Link to={s.link} className="text-[10px] sm:text-[11px] text-primary font-bold hover:underline truncate block">{s.linkText}</Link>
+              </div>
             </CardContent>
           </Card>
         ))}

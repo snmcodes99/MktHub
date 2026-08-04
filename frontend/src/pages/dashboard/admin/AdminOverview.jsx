@@ -33,11 +33,15 @@ function StatCard({ title, value, sub, icon, gradient, bg, iconColor }) {
   return (
     <Card className="relative overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all">
       <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient}`} />
-      <CardContent className="p-5">
-        <div className={`${bg} ${iconColor} p-2.5 rounded-xl w-fit mb-4`}>{icon}</div>
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{title}</p>
-        <p className="text-2xl font-extrabold tracking-tight mt-0.5">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+      <CardContent className="p-3 sm:p-5">
+        <div className="flex items-center sm:block gap-3 sm:gap-0">
+          <div className={`${bg} ${iconColor} p-2 rounded-lg sm:p-2.5 sm:rounded-xl w-fit mb-0 sm:mb-4 shrink-0`}>{icon}</div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-wider md:tracking-widest truncate leading-tight mb-0.5 sm:mb-0">{title}</p>
+            <p className="text-lg sm:text-2xl font-extrabold tracking-tight mt-0 sm:mt-0.5 truncate">{value}</p>
+            {sub && <p className="text-[10px] sm:text-xs text-muted-foreground mt-0 sm:mt-1 truncate">{sub}</p>}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
@@ -118,11 +122,11 @@ export default function AdminOverview() {
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Revenue" value={formatPrice(stats.totalRevenue || 0)} sub="Platform lifetime" icon={<TrendingUp className="h-5 w-5" />} gradient="from-emerald-500 to-teal-600" bg="bg-emerald-50" iconColor="text-emerald-600" />
-        <StatCard title="Total Users" value={(stats.totalUsers || (stats.totalCustomers || 0) + (stats.totalSellers || 0) + (stats.totalAdmins || 0)).toLocaleString()} sub={`${stats.totalSellers || 0} sellers · ${stats.totalCustomers || 0} customers`} icon={<Users className="h-5 w-5" />} gradient="from-blue-500 to-indigo-600" bg="bg-blue-50" iconColor="text-blue-600" />
-        <StatCard title="Total Products" value={(stats.totalProducts || 0).toLocaleString()} sub={`${stats.inactiveProducts || 0} inactive`} icon={<ShoppingBag className="h-5 w-5" />} gradient="from-purple-500 to-violet-600" bg="bg-purple-50" iconColor="text-purple-600" />
-        <StatCard title="Total Orders" value={(stats.totalOrders || (stats.pendingOrders || 0) + (stats.deliveredOrders || 0) + (stats.processingOrders || 0) + (stats.cancelledOrders || 0)).toLocaleString()} sub={`${stats.pendingOrders || 0} pending`} icon={<Package className="h-5 w-5" />} gradient="from-orange-500 to-amber-600" bg="bg-orange-50" iconColor="text-orange-600" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard title="Total Revenue" value={formatPrice(stats.totalRevenue || 0)} sub="Platform lifetime" icon={<TrendingUp className="h-4 sm:h-5 w-4 sm:w-5" />} gradient="from-emerald-500 to-teal-600" bg="bg-emerald-50" iconColor="text-emerald-600" />
+        <StatCard title="Total Users" value={(stats.totalUsers || (stats.totalCustomers || 0) + (stats.totalSellers || 0) + (stats.totalAdmins || 0)).toLocaleString()} sub={`${stats.totalSellers || 0} sellers · ${stats.totalCustomers || 0} customers`} icon={<Users className="h-4 sm:h-5 w-4 sm:w-5" />} gradient="from-blue-500 to-indigo-600" bg="bg-blue-50" iconColor="text-blue-600" />
+        <StatCard title="Total Products" value={(stats.totalProducts || 0).toLocaleString()} sub={`${stats.inactiveProducts || 0} inactive`} icon={<ShoppingBag className="h-4 sm:h-5 w-4 sm:w-5" />} gradient="from-purple-500 to-violet-600" bg="bg-purple-50" iconColor="text-purple-600" />
+        <StatCard title="Total Orders" value={(stats.totalOrders || (stats.pendingOrders || 0) + (stats.deliveredOrders || 0) + (stats.processingOrders || 0) + (stats.cancelledOrders || 0)).toLocaleString()} sub={`${stats.pendingOrders || 0} pending`} icon={<Package className="h-4 sm:h-5 w-4 sm:w-5" />} gradient="from-orange-500 to-amber-600" bg="bg-orange-50" iconColor="text-orange-600" />
       </div>
 
 

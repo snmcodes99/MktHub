@@ -108,23 +108,23 @@ export default function SellerOverview() {
       </div>
 
       {/* ── Stat Cards ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((s, i) => (
           <Card key={i} className="shadow-sm overflow-hidden">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${s.bg}`}>
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center shrink-0 ${s.bg}`}>
                   {s.icon}
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-0.5">{s.title}</p>
-                  <p className="text-xl font-bold text-foreground">{s.value}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-0.5 truncate uppercase tracking-wider leading-tight">{s.title}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground truncate">{s.value}</p>
                 </div>
               </div>
               {s.isRating && (
-                <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold">
-                  <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                  <span className="text-muted-foreground">{s.trend}</span>
+                <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold">
+                  <Star className="h-3 w-3 fill-amber-500 text-amber-500 shrink-0" />
+                  <span className="text-muted-foreground truncate">{s.trend}</span>
                 </div>
               )}
             </CardContent>

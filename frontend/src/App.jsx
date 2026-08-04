@@ -35,44 +35,32 @@ function DashboardLayout() {
   }, [location.pathname])
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground pb-[52px] md:pb-0">
       <Navbar />
-      
-      {/* Mobile Menu Toggle Bar */}
-      <div className="md:hidden flex items-center justify-between border-b px-4 py-3 bg-muted/30 sticky top-16 z-30">
-        <span className="font-medium text-sm tracking-wide">Dashboard Menu</span>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          className="p-1.5 border rounded-md bg-background text-foreground hover:bg-muted transition-colors"
-        >
-           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </div>
 
-      <div className="container mx-auto flex flex-1 gap-8 px-4 py-4 md:py-8 md:px-6 relative">
-        
-        {/* Mobile Backdrop Overlay */}
+      <div className="container mx-auto flex flex-1 gap-6 px-3 py-4 md:py-8 md:px-6 relative">
+
+        {/* Mobile Backdrop */}
         {isMobileMenuOpen && (
-          <div 
-            className="md:hidden fixed inset-0 z-40 bg-black/50"
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
 
-        <aside className={`${
-          isMobileMenuOpen 
-            ? "block fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-background border-r shadow-2xl transition-transform transform translate-x-0 overflow-y-auto pt-20 px-4" 
-            : "hidden"
-          } shrink-0 md:block md:static md:w-auto md:bg-transparent md:border-0 md:shadow-none md:p-0 md:pt-0`}
+        {/* Sidebar drawer */}
+        <aside
+          className={`${
+            isMobileMenuOpen
+              ? "block fixed inset-y-0 left-0 z-50 w-72 max-w-[80vw] bg-background border-r shadow-2xl overflow-y-auto pt-4 px-3"
+              : "hidden"
+          } shrink-0 md:block md:static md:w-auto md:bg-transparent md:border-0 md:shadow-none md:p-0`}
           data-lenis-prevent="true"
         >
           {isMobileMenuOpen && (
-            <div className="flex justify-between items-center md:hidden mb-4 pb-2 border-b">
-              <span className="font-semibold text-lg">Menu</span>
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1 rounded-full hover:bg-muted"
-              >
+            <div className="flex justify-between items-center mb-4 pb-3 border-b px-1">
+              <span className="font-bold text-base">Menu</span>
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 rounded-full hover:bg-muted">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -80,7 +68,19 @@ function DashboardLayout() {
           <Sidebar />
         </aside>
 
-        <main className="flex-1 min-w-0 min-h-0">
+        <main className="flex-1 min-w-0">
+          {/* Mobile dashboard header with hamburger */}
+          <div className="md:hidden flex items-center justify-between mb-5 pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shrink-0"
+              >
+                <Menu className="h-[18px] w-[18px]" />
+              </button>
+              <span className="text-[13px] font-bold tracking-tight text-slate-900 dark:text-slate-100 uppercase">Dashboard Menu</span>
+            </div>
+          </div>
           <PageTransition>
             <Outlet />
           </PageTransition>

@@ -1,6 +1,6 @@
 import { useRef } from "react"
 import { Link } from "react-router-dom"
-import { ChevronRight, ChevronLeft, Loader2, ShoppingBag } from "lucide-react"
+import { ChevronRight, ChevronLeft, Loader2, ShoppingBag, ArrowRight, Sparkles, Zap } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,6 @@ import { ProductCard } from "@/components/product/ProductCard"
 import { getProducts } from "@/api/productApi"
 import { getCategories } from "@/api/categoryApi"
 
-// Hardcoded popular categories with curated photos
 const POPULAR_CATEGORIES = [
   { name: "Electronics",    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=160&h=160&fit=crop&q=80",  slug: "Electronics" },
   { name: "Clothing",       image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=160&h=160&fit=crop&q=80",  slug: "Clothing" },
@@ -21,105 +20,133 @@ const POPULAR_CATEGORIES = [
 ]
 
 export default function LandingPage() {
-  const trendingRef = useRef(null)
+  const trendingRef    = useRef(null)
   const newLaunchesRef = useRef(null)
 
   const scroll = (ref, direction) => {
     if (ref.current) {
       const { scrollLeft, clientWidth } = ref.current
-      const scrollAmount = clientWidth * 0.8
       ref.current.scrollTo({
-        left: direction === "left" ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
-        behavior: "smooth"
+        left: direction === "left" ? scrollLeft - clientWidth * 0.75 : scrollLeft + clientWidth * 0.75,
+        behavior: "smooth",
       })
     }
   }
 
-  const { data: trendingData, isLoading: trendingLoading } = useQuery({
-    queryKey: ["landing-products", "trending"],
-    queryFn: () => getProducts({ limit: 12 }),
-  })
+  const { data: trendingData,    isLoading: trendingLoading    } = useQuery({ queryKey: ["landing-products", "trending"], queryFn: () => getProducts({ limit: 12 }) })
+  const { data: newLaunchesData, isLoading: newLaunchesLoading } = useQuery({ queryKey: ["landing-products", "new"],      queryFn: () => getProducts({ limit: 15, sort: "-createdAt" }) })
 
-  const { data: newLaunchesData, isLoading: newLaunchesLoading } = useQuery({
-    queryKey: ["landing-products", "new"],
-    queryFn: () => getProducts({ limit: 15, sort: "-createdAt" }),
-  })
-
-  const { data: categoryData } = useQuery({
-    queryKey: ["landing-categories"],
-    queryFn: getCategories,
-  })
-
-  const trendingProducts = trendingData?.data?.data?.products || []
-  const newProducts = newLaunchesData?.data?.data?.products || []
-  const categories = categoryData?.data?.data || []
+  const trendingProducts = trendingData?.data?.data?.products    || []
+  const newProducts      = newLaunchesData?.data?.data?.products || []
 
   return (
-    <div className="flex flex-col bg-background min-h-screen pb-12">
+    <div className="flex flex-col bg-slate-50 dark:bg-slate-950 min-h-screen pb-10 md:pb-12 font-sans">
 
-      {/* ── 1. Hero Banner ── */}
-      <div className="w-full px-4 md:px-8 lg:px-12 max-w-[1536px] mx-auto pt-6 md:pt-8">
-        <div className="relative rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden min-h-[400px] md:min-h-[480px] flex items-center border border-border/50 shadow-sm">
+      {/* ══ 1. HERO ══════════════════════════════════════════════ */}
+      <div className="w-full px-3 sm:px-4 md:px-8 lg:px-12 max-w-[1536px] mx-auto pt-4 md:pt-8">
+        <div className="relative rounded-2xl md:rounded-[2rem] overflow-hidden border border-border/50 shadow-sm bg-white dark:bg-slate-900">
+          
+          {/* ── Mobile Hero: 70/30 split like PC ── */}
+          <div className="md:hidden flex items-center min-h-[300px] relative">
+            {/* BG image layer (70/30 split) */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
+              <div className="absolute inset-y-0 left-0 w-[40%] bg-white dark:bg-slate-900 z-10" />
+              <div className="absolute inset-y-0 right-0 w-[70%] z-0">
+                <div className="absolute inset-0 bg-[url('/hero-bg-shopping.png')] bg-cover bg-center" />
+                <div className="absolute inset-y-0 left-0 w-[90%] bg-gradient-to-r from-white via-white/80 to-transparent dark:from-slate-900 dark:via-slate-900/80 backdrop-blur-[2px] [mask-image:linear-gradient(to_right,black_30%,transparent_100%)]" />
+              </div>
+            </div>
 
-          {/* Background: solid left 30% + image right 70% with blur fade */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
-            <div className="absolute inset-y-0 left-0 w-[30%] bg-white dark:bg-slate-900 z-10"></div>
-            <div className="absolute inset-y-0 right-0 w-[70%] z-0">
-              <div className="absolute inset-0 bg-[url('/hero-bg-shopping.png')] bg-cover bg-center"></div>
-              {/* Blur fade over left portion of the photo */}
-              <div className="absolute inset-y-0 left-0 w-[75%] lg:w-[65%] bg-gradient-to-r from-white via-white/60 to-transparent dark:from-slate-900 dark:via-slate-900/60 backdrop-blur-md [mask-image:linear-gradient(to_right,black_15%,transparent_100%)]"></div>
+            {/* Text Overlay */}
+            <div className="relative z-10 w-full px-5 py-6">
+              <h1 className="text-[26px] leading-[1.1] font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                Welcome to <br/>mkt<span className="text-emerald-500">hub</span>
+              </h1>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mb-5 max-w-[200px] font-medium">
+                A full-stack multi-vendor e-commerce platform built for educational purposes. Browse & buy from verified sellers.
+              </p>
+              
+              <Link to="/products" className="inline-block max-w-[160px] w-full">
+                <Button className="w-full h-10 rounded-full font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition-all duration-300 text-[11px] gap-1.5">
+                  <ShoppingBag className="h-3.5 w-3.5" />
+                  Browse Products
+                </Button>
+              </Link>
             </div>
           </div>
 
-          {/* Left Content */}
-          <div className="relative z-10 w-full max-w-2xl px-6 py-12 md:px-16 md:py-20">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 text-slate-900 dark:text-white tracking-tight">
-              Welcome to mkt<span className="text-emerald-500">hub</span>
-            </h1>
-            <p className="text-base md:text-lg text-slate-600 dark:text-slate-300 font-medium mb-10 max-w-lg">
-              A full-stack multi-vendor e-commerce platform built for educational purposes.
-              You can browse and buy products as a customer, or register a seller account to manage your own inventory.
-            </p>
-            <Link to="/products">
-              <Button className="h-12 px-8 md:h-14 md:px-10 rounded-full font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:-translate-y-1 transition-all duration-300 text-sm md:text-base">
-                <ShoppingBag className="mr-2 h-5 w-5" /> Browse Products
-              </Button>
-            </Link>
+          {/* ── Desktop Hero: side-by-side ── */}
+          <div className="hidden md:flex items-center min-h-[400px] lg:min-h-[480px]">
+            {/* BG image layer */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
+              <div className="absolute inset-y-0 left-0 w-[30%] bg-white dark:bg-slate-900 z-10" />
+              <div className="absolute inset-y-0 right-0 w-[70%] z-0">
+                <div className="absolute inset-0 bg-[url('/hero-bg-shopping.png')] bg-cover bg-center" />
+                <div className="absolute inset-y-0 left-0 w-[75%] lg:w-[65%] bg-gradient-to-r from-white via-white/60 to-transparent dark:from-slate-900 dark:via-slate-900/60 backdrop-blur-md [mask-image:linear-gradient(to_right,black_15%,transparent_100%)]" />
+              </div>
+            </div>
+            {/* Content */}
+            <div className="relative z-10 w-full max-w-2xl px-10 py-16 md:px-16 md:py-20">
+              <h1 className="text-5xl lg:text-6xl font-black mb-6 text-slate-900 dark:text-white tracking-tight">
+                Welcome to mkt<span className="text-emerald-500">hub</span>
+              </h1>
+              <p className="text-base md:text-lg text-slate-600 dark:text-slate-300 font-medium mb-10 max-w-lg">
+                A full-stack multi-vendor e-commerce platform built for educational purposes.
+                Browse and buy as a customer, or register a seller account to manage your inventory.
+              </p>
+              <Link to="/products">
+                <Button className="h-13 px-8 md:h-14 md:px-10 rounded-full font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all duration-300 text-sm md:text-base gap-2">
+                  <ShoppingBag className="h-5 w-5" />
+                  Browse Products
+                </Button>
+              </Link>
+            </div>
           </div>
-
         </div>
       </div>
 
-      {/* ── 2. Popular Categories ── */}
-      <div className="w-full px-4 md:px-8 lg:px-12 max-w-[1536px] mx-auto mt-10 md:mt-14">
-        <div className="flex items-center justify-between mb-6">
+      {/* ══ 2. POPULAR CATEGORIES (CIRCULAR PREMIUM) ═════════════════════════════ */}
+      <div className="w-full px-4 md:px-8 lg:px-12 max-w-[1536px] mx-auto mt-10 md:mt-16">
+        <div className="flex items-end justify-between mb-5 md:mb-8">
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Popular Categories</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Browse by what you love</p>
+            <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              Top Categories
+            </h2>
+            <p className="text-xs md:text-base text-slate-500 dark:text-slate-400 mt-1 font-medium">Find exactly what you need</p>
           </div>
-          <Link to="/products" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 group">
-            View All <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
-        <div className="flex items-start justify-center gap-8 md:gap-12 overflow-x-auto pb-3 flex-wrap" style={{ scrollbarWidth: 'none' }}>
+        {/* Circular Cards — Horizontal scroll */}
+        <div
+          className="flex items-start gap-4 sm:gap-6 md:gap-8 overflow-x-auto pb-4 pt-2 -mx-2 px-2 md:flex-wrap md:justify-center"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {POPULAR_CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
               to={`/products?search=${cat.slug}`}
-              className="flex flex-col items-center gap-2.5 group shrink-0"
+              className="flex flex-col items-center gap-3 group shrink-0"
             >
-              <div
-                className="w-14 h-14 md:w-16 md:h-16 rounded-full ring-2 ring-emerald-200 dark:ring-emerald-800 shadow-md"
-                style={{
-                  backgroundImage: `url(${cat.image})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-                aria-label={cat.name}
-              />
-              {/* Label */}
-              <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-400 text-center leading-tight max-w-[72px]">
+              <div className="relative">
+                {/* Premium Glow effect on hover */}
+                <div className="absolute inset-0 rounded-full bg-emerald-500 blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
+                
+                {/* Circular Image Container */}
+                <div
+                  className="relative w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full shadow-md bg-white dark:bg-slate-800 
+                             border-[3px] border-white dark:border-slate-800 group-hover:border-emerald-400 dark:group-hover:border-emerald-500
+                             transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-emerald-500/20 z-10 overflow-hidden"
+                >
+                  <div 
+                    className="absolute inset-0 transition-transform duration-500 group-hover:scale-110"
+                    style={{ backgroundImage: `url(${cat.image})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                    aria-label={cat.name}
+                  />
+                  {/* Subtle inner shadow for depth */}
+                  <div className="absolute inset-0 rounded-full shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] pointer-events-none" />
+                </div>
+              </div>
+              <span className="text-[11px] sm:text-sm font-bold text-slate-700 dark:text-slate-300 text-center tracking-tight transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                 {cat.name}
               </span>
             </Link>
@@ -127,104 +154,109 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ── 3. Standard Product Grids ── */}
-      <section className="container mx-auto px-4 md:px-8 py-12 space-y-16">
+      {/* ══ 3. PRODUCT CAROUSELS ═════════════════════════════════ */}
+      <section className="w-full px-4 md:px-8 lg:px-12 max-w-[1536px] mx-auto mt-8 md:mt-12 space-y-12 md:space-y-20">
 
-        {/* Trending Products */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Trending Products</h2>
-              <p className="text-sm text-muted-foreground mt-1">Products listed by various sellers across the platform.</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to="/products" className="text-primary hover:underline text-sm font-medium hidden md:block">
-                View All
-              </Link>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-border bg-card" onClick={() => scroll(trendingRef, 'left')}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-border bg-card" onClick={() => scroll(trendingRef, 'right')}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {trendingLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div
-              ref={trendingRef}
-              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {trendingProducts.length > 0 ? (
-                trendingProducts.map((product) => (
-                  <div key={product._id} className="min-w-[240px] sm:min-w-[260px] snap-start">
-                    <ProductCard product={product} />
-                  </div>
-                ))
-              ) : (
-                <div className="text-muted-foreground py-8 w-full text-center border border-dashed border-border rounded-lg bg-muted/30">
-                  No products available in the database yet.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Trending */}
+        <ProductCarousel
+          title="Trending Now"
+          subtitle="The most loved items this week"
+          icon={<Zap className="w-5 h-5 text-amber-500 fill-amber-500" />}
+          viewAllTo="/products"
+          scrollRef={trendingRef}
+          onScroll={scroll}
+          isLoading={trendingLoading}
+          products={trendingProducts}
+          emptyMsg="No products available yet."
+        />
 
         {/* New Launches */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Recently Added</h2>
-              <p className="text-sm text-muted-foreground mt-1">The newest items added by our test sellers.</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to="/products?sort=-createdAt" className="text-primary hover:underline text-sm font-medium hidden md:block">
-                View All
-              </Link>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-border bg-card" onClick={() => scroll(newLaunchesRef, 'left')}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-border bg-card" onClick={() => scroll(newLaunchesRef, 'right')}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {newLaunchesLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div
-              ref={newLaunchesRef}
-              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {newProducts.length > 0 ? (
-                newProducts.map((product) => (
-                  <div key={product._id} className="min-w-[240px] sm:min-w-[260px] snap-start">
-                    <ProductCard product={product} />
-                  </div>
-                ))
-              ) : (
-                <div className="text-muted-foreground py-8 w-full text-center border border-dashed border-border rounded-lg bg-muted/30">
-                  No new products available.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <ProductCarousel
+          title="Fresh Arrivals"
+          subtitle="Just landed from our top sellers"
+          icon={<Sparkles className="w-5 h-5 text-indigo-500 fill-indigo-500" />}
+          viewAllTo="/products?sort=-createdAt"
+          scrollRef={newLaunchesRef}
+          onScroll={scroll}
+          isLoading={newLaunchesLoading}
+          products={newProducts}
+          emptyMsg="No new products available."
+        />
 
       </section>
+    </div>
+  )
+}
+
+/* ── Reusable carousel section ─────────────────────────────── */
+function ProductCarousel({ title, subtitle, icon, viewAllTo, scrollRef, onScroll, isLoading, products, emptyMsg }) {
+  return (
+    <div className="relative">
+      {/* Header */}
+      <div className="flex items-end justify-between mb-5 md:mb-8">
+        <div>
+          <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            {title} {icon}
+          </h2>
+          <p className="text-xs md:text-base text-slate-500 dark:text-slate-400 mt-1 font-medium">{subtitle}</p>
+        </div>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link to={viewAllTo} className="text-xs md:text-sm font-bold text-emerald-600 hover:text-emerald-700 items-center gap-1 hidden sm:flex group">
+            View All <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          {/* Scroll arrows — hidden on mobile */}
+          <div className="hidden sm:flex gap-2">
+            <button
+              onClick={() => onScroll(scrollRef, "left")}
+              className="h-10 w-10 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm"
+            >
+              <ChevronLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            </button>
+            <button
+              onClick={() => onScroll(scrollRef, "right")}
+              className="h-10 w-10 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm"
+            >
+              <ChevronRight className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+        </div>
+      ) : products.length === 0 ? (
+        <div className="text-slate-500 py-10 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-900/50 text-sm font-medium">
+          {emptyMsg}
+        </div>
+      ) : (
+        <>
+          <div
+            ref={scrollRef}
+            className="flex gap-4 md:gap-5 overflow-x-auto pb-6 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="w-[calc(50vw-24px)] sm:w-[240px] md:w-[260px] snap-start shrink-0"
+              >
+                <div className="h-full transition-transform duration-300 hover:-translate-y-1">
+                   <ProductCard product={product} />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Mobile View All link below carousel */}
+          <Link
+            to={viewAllTo}
+            className="sm:hidden mt-2 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-sm font-bold text-emerald-600 dark:text-emerald-400 active:scale-95 transition-transform"
+          >
+            Explore More <ArrowRight className="w-4 h-4" />
+          </Link>
+        </>
+      )}
     </div>
   )
 }
