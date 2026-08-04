@@ -95,10 +95,10 @@ export default function SellerOverview() {
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
-            Welcome back, {user?.name?.split(' ')[0] || "TechStore"}! <span className="text-2xl">👋</span>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">
+            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-primary">{user?.name?.split(' ')[0] || "TechStore"}</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Here's what's happening with your store today.</p>
+          <p className="text-muted-foreground text-sm mt-1.5 font-medium">Here's what's happening with your store today.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="gap-2 font-medium">

@@ -125,10 +125,10 @@ export default function CustomerOverview() {
       {/* ── 1. HEADER ROW ───────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            Welcome back, {user?.name?.split(' ')[0]}! <span className="text-3xl">👋</span>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">
+            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-500">{user?.name?.split(' ')[0]}</span>
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Here's what's happening with your account today.</p>
+          <p className="text-muted-foreground text-sm mt-1.5 font-medium">Here's what's happening with your account today.</p>
         </div>
 
       </div>
