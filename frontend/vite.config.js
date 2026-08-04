@@ -25,11 +25,21 @@ export default defineConfig(({ command }) => ({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-          ui: ['lucide-react', 'framer-motion', 'clsx', 'tailwind-merge'],
-          charts: ['recharts'],
-        },
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('@tanstack/react-query')) {
+              return 'vendor';
+            }
+            if (id.includes('lucide-react') || id.includes('framer-motion') || id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'ui';
+            }
+            if (id.includes('recharts')) {
+              return 'charts';
+            }
+            // Put the rest of node_modules in its own chunk to prevent massive bundles
+            return 'deps'; 
+          }
+        }
       },
     },
   }
