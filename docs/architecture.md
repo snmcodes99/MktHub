@@ -17,8 +17,8 @@ graph TD
     
     subgraph Express HTTP Layer
         Proxy -->|/api/* (Port 3000)| API[Express 5 API: app.js]
-        API <-->|Mongoose ODM (Transactions)| DB[(MongoDB Atlas)]
-        API <-->|redis.utils.js| Cache[(Redis)]
+        API -->|Mongoose ODM| DB[(MongoDB Atlas)]
+        API -->|redis.utils.js| Cache[(Redis)]
     end
     
     subgraph Background Processing Layer
