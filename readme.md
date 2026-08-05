@@ -47,7 +47,15 @@ MktHub focuses on backend architecture to ensure data integrity and separation o
 
 ## System Architecture
 
-The system utilizes a decoupled architecture where the React SPA interacts with the API via an Nginx reverse proxy. The API relies on MongoDB for persistent state and Redis for caching and message brokering.
+The system utilizes a decoupled, event-driven architecture where the React SPA interacts with the API via an Nginx reverse proxy. The API relies on MongoDB for persistent state and Redis for caching and message brokering.
+
+### Key System Design Patterns
+- **Event-Driven Architecture:** Heavy I/O tasks (like PDF generation and emails) are decoupled from the main HTTP thread using Redis and BullMQ, allowing the API to remain highly responsive.
+- **Cache-Aside Pattern:** High-read data like the product catalog is cached in Redis. The application checks the cache first, falling back to MongoDB on a cache miss.
+- **Transactional Consistency:** Distributed operations (e.g., locking inventory and creating an order) are wrapped in MongoDB ACID transactions to ensure atomicity.
+- **Reverse Proxy / API Gateway Pattern:** Nginx sits in front of the application, terminating SSL and routing traffic appropriately to the React frontend or Node.js API.
+- **Idempotency:** Webhook endpoints (e.g., Razorpay) process payments safely, ensuring that duplicate webhook events do not result in double-processing.
+- **Eventual Consistency:** Background cron jobs periodically reconcile state (like releasing abandoned inventory) without blocking synchronous user flows.
 
 ```mermaid
 graph TD
