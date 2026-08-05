@@ -13,22 +13,22 @@ Building e-commerce requires solving specific distributed state problems:
 
 ```mermaid
 graph TD
-    Client[React 19 / Vite SPA] -->|HTTPS| Proxy[Nginx Container]
+    Client[Web Browser] -->|HTTPS 443| Nginx[Nginx Proxy Container]
     
-    subgraph Express HTTP Layer
-        Proxy -->|/api/* (Port 3000)| API[Express 5 API: app.js]
-        API -->|Mongoose ODM| DB[(MongoDB Atlas)]
-        API -->|redis.utils.js| Cache[(Redis)]
+    subgraph Docker Compose Network
+        Nginx -->|Route /*| Frontend[Frontend Container: React SPA]
+        Nginx -->|Route /api/*| API[Backend Container: Express 5 API]
+        
+        API -->|Cache & Message Broker| Redis[(Redis Container)]
+        Redis -->|Consume Jobs| Workers[Background Workers]
     end
     
-    subgraph Background Processing Layer
-        Cache -->|BullMQ Jobs| Workers[Worker Processes]
-        Workers -->|invoiceQueue| PDF[pdfkit]
-        Workers -->|emailQueue| SMTP[Nodemailer / SMTP]
-        Cron[node-cron: schedular.js] -->|Audits Expirations| DB[(MongoDB Atlas)]
-    end
+    Workers -->|Generate Invoice| PDF[pdfkit]
+    Workers -->|Send Email| SMTP[Nodemailer]
     
-    API -->|HMAC Verification| Razorpay[Razorpay Webhooks]
+    API -->|Mongoose ODM Transactions| DB[(MongoDB Atlas Cloud)]
+    Cron[Node-Cron Scheduler] -->|Revert Abandoned Carts| DB
+    API -->|HMAC Webhooks| Razorpay[Razorpay API]
     API -->|multer| Cloudinary[Cloudinary CDN]
 ```
 
