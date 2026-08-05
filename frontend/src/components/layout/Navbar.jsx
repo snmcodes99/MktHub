@@ -46,92 +46,95 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/90 backdrop-blur-md">
-        <div className="flex h-14 md:h-16 items-center justify-between px-3 md:px-6 max-w-[1536px] mx-auto gap-2">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl shadow-sm transition-all duration-300">
+        <div className="flex h-16 md:h-[72px] items-center justify-between px-4 md:px-8 max-w-[1536px] mx-auto gap-4">
 
           {/* ── Left: Logo ── */}
-          <Link to="/" className="shrink-0">
+          <Link to="/" className="shrink-0 transition-transform duration-300 hover:scale-[1.02]">
             <Logo />
           </Link>
 
           {/* ── Center: Desktop search ── */}
           <form
-            className="hidden md:flex flex-1 max-w-md mx-4"
+            className="hidden md:flex flex-1 max-w-xl mx-8 relative group"
             onSubmit={handleSearch}
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 group-hover:text-primary transition-colors" />
               <input
                 name="search"
                 type="search"
-                placeholder="Search products..."
+                placeholder="Search for anything..."
                 defaultValue={initialSearch}
-                className="flex h-9 w-full rounded-full border border-input bg-muted/50 pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-11 w-full rounded-full border border-border/50 bg-muted/30 pl-11 pr-4 text-[15px] shadow-sm transition-all duration-300 placeholder:text-muted-foreground/70 hover:bg-muted/50 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:bg-background"
               />
             </div>
           </form>
 
           {/* ── Desktop Nav links ── */}
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-muted-foreground">
-            <Link to="/products" className="hover:text-primary transition-colors">Products</Link>
-            {user?.role === "SELLER" && <Link to="/seller" className="hover:text-primary transition-colors">Seller</Link>}
-            {user?.role === "ADMIN"  && <Link to="/admin"  className="hover:text-primary transition-colors">Admin</Link>}
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-muted-foreground/80">
+            <Link to="/products" className="hover:text-foreground hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all">Products</Link>
+            {user?.role === "SELLER" && <Link to="/seller" className="hover:text-foreground transition-all">Seller</Link>}
+            {user?.role === "ADMIN"  && <Link to="/admin"  className="hover:text-foreground transition-all">Admin</Link>}
           </nav>
 
           {/* ── Right: Actions ── */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
 
             {/* Mobile search toggle */}
             <button
               onClick={() => setMobileSearchOpen(v => !v)}
               aria-label="Search"
-              className="md:hidden h-8 w-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="md:hidden h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95"
             >
-              <Search className="h-[18px] w-[18px]" />
+              <Search className="h-5 w-5" />
             </button>
 
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
-              className="h-8 w-8 md:h-9 md:w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95"
             >
               {theme === "dark"
-                ? <Sun  className="h-[18px] w-[18px] text-amber-400" />
-                : <Moon className="h-[18px] w-[18px]" />}
+                ? <Sun  className="h-5 w-5 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]" />
+                : <Moon className="h-5 w-5" />}
             </button>
 
             {/* Cart */}
             <Link to="/cart">
-              <button className="relative h-8 w-8 md:h-9 md:w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <ShoppingCart className="h-[18px] w-[18px] md:h-5 md:w-5" />
+              <button className="relative h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95 group">
+                <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
                 {cartItemCount > 0 && (
-                  <span className="absolute right-0 top-0 md:right-1 md:top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.2)]">
                     {cartItemCount > 9 ? "9+" : cartItemCount}
                   </span>
                 )}
               </button>
             </Link>
 
+            <div className="hidden md:block w-[1px] h-6 bg-border/50 mx-2"></div>
+
             {/* Auth buttons — desktop only */}
             {user ? (
-              <div className="hidden md:flex items-center gap-1">
-                <Button variant="ghost" className="rounded-full gap-2 text-sm" asChild>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" className="rounded-full h-10 px-5 gap-2 text-sm border-border/50 bg-background hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm" asChild>
                   <Link to="/dashboard">
-                    <User className="h-4 w-4" />
-                    My Account
+                    <User className="h-4 w-4 text-primary" />
+                    <span className="font-semibold">Account</span>
                   </Link>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={logout} className="rounded-full text-muted-foreground hover:text-destructive">
-                  <LogOut className="h-5 w-5" />
+                <Button variant="ghost" size="icon" onClick={logout} className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95">
+                  <LogOut className="h-[18px] w-[18px]" />
                 </Button>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <Button variant="ghost" className="rounded-full text-sm" asChild>
+              <div className="hidden md:flex items-center gap-3">
+                <Button variant="ghost" className="rounded-full h-10 px-5 text-sm font-semibold hover:bg-muted/80" asChild>
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button className="rounded-full text-sm" asChild>
+                <Button className="rounded-full h-10 px-6 text-sm font-semibold shadow-md hover:shadow-primary/25 transition-all" asChild>
                   <Link to="/register">Sign up</Link>
                 </Button>
               </div>
