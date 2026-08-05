@@ -72,80 +72,82 @@ export function Navbar() {
             </div>
           </form>
 
-          {/* ── Desktop Nav links ── */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-muted-foreground/80">
-            <Link to="/products" className="hover:text-foreground hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all">Products</Link>
-            {user?.role === "SELLER" && <Link to="/seller" className="hover:text-foreground transition-all">Seller</Link>}
-            {user?.role === "ADMIN"  && <Link to="/admin"  className="hover:text-foreground transition-all">Admin</Link>}
-          </nav>
+          {/* ── Right Section: Nav links & Actions ── */}
+          <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+            {/* Desktop Nav links */}
+            <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-muted-foreground/80">
+              <Link to="/products" className="hover:text-foreground hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all">Products</Link>
+              {user?.role === "SELLER" && <Link to="/seller" className="hover:text-foreground transition-all">Seller</Link>}
+              {user?.role === "ADMIN"  && <Link to="/admin"  className="hover:text-foreground transition-all">Admin</Link>}
+            </nav>
 
-          {/* ── Right: Actions ── */}
-          <div className="flex items-center gap-1 sm:gap-2">
-
-            {/* Mobile search toggle */}
-            <button
-              onClick={() => setMobileSearchOpen(v => !v)}
-              aria-label="Search"
-              className="md:hidden h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95"
-            >
-              {theme === "dark"
-                ? <Sun  className="h-5 w-5 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]" />
-                : <Moon className="h-5 w-5" />}
-            </button>
-
-            {/* Cart */}
-            <Link to="/cart">
-              <button className="relative h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95 group">
-                <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                {cartItemCount > 0 && (
-                  <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.2)]">
-                    {cartItemCount > 9 ? "9+" : cartItemCount}
-                  </span>
-                )}
+            {/* Actions */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Mobile search toggle */}
+              <button
+                onClick={() => setMobileSearchOpen(v => !v)}
+                aria-label="Search"
+                className="md:hidden h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95"
+              >
+                <Search className="h-5 w-5" />
               </button>
-            </Link>
 
-            <div className="hidden md:block w-[1px] h-6 bg-border/50 mx-2"></div>
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
+                className="h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95"
+              >
+                {theme === "dark"
+                  ? <Sun  className="h-5 w-5 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]" />
+                  : <Moon className="h-5 w-5" />}
+              </button>
 
-            {/* Auth buttons — desktop only */}
-            {user ? (
-              <div className="hidden md:flex items-center gap-2">
-                <Button variant="outline" className="rounded-full h-10 px-5 gap-2 text-sm border-border/50 bg-background hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm" asChild>
-                  <Link to="/dashboard">
-                    <User className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">Account</span>
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={logout} className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95">
-                  <LogOut className="h-[18px] w-[18px]" />
-                </Button>
-              </div>
-            ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <Button variant="ghost" className="rounded-full h-10 px-5 text-sm font-semibold hover:bg-muted/80" asChild>
-                  <Link to="/login">Log in</Link>
-                </Button>
-                <Button className="rounded-full h-10 px-6 text-sm font-semibold shadow-md hover:shadow-primary/25 transition-all" asChild>
+              {/* Cart */}
+              <Link to="/cart">
+                <button className="relative h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95 group">
+                  <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+                      {cartItemCount > 9 ? "9+" : cartItemCount}
+                    </span>
+                  )}
+                </button>
+              </Link>
+
+              <div className="hidden md:block w-[1px] h-6 bg-border/50 mx-2"></div>
+
+              {/* Auth buttons — desktop only */}
+              {user ? (
+                <div className="hidden md:flex items-center gap-2">
+                  <Button variant="outline" className="rounded-full h-10 px-5 gap-2 text-sm border-border/50 bg-background hover:bg-muted/50 hover:border-primary/30 transition-all shadow-sm" asChild>
+                    <Link to="/dashboard">
+                      <User className="h-4 w-4 text-primary" />
+                      <span className="font-semibold">Account</span>
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={logout} className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95">
+                    <LogOut className="h-[18px] w-[18px]" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="hidden md:flex items-center gap-3">
+                  <Button variant="ghost" className="rounded-full h-10 px-5 text-sm font-semibold hover:bg-muted/80" asChild>
+                    <Link to="/login">Log in</Link>
+                  </Button>
+                  <Button className="rounded-full h-10 px-6 text-sm font-semibold shadow-md hover:shadow-primary/25 transition-all" asChild>
+                    <Link to="/register">Sign up</Link>
+                  </Button>
+                </div>
+              )}
+
+              {/* Mobile: Sign up pill (only when not logged in) */}
+              {!user && (
+                <Button className="md:hidden ml-1 rounded-full h-[30px] px-3.5 text-[11px] font-bold" asChild>
                   <Link to="/register">Sign up</Link>
                 </Button>
-              </div>
-            )}
-
-            {/* Mobile: Sign up pill (only when not logged in) */}
-            {!user && (
-              <Button className="md:hidden ml-1 rounded-full h-[30px] px-3.5 text-[11px] font-bold" asChild>
-                <Link to="/register">Sign up</Link>
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
