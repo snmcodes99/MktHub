@@ -39,7 +39,7 @@ jobs:
             sleep 20
 
             echo "Checking application health..."
-            curl -f https://mkthub.sahilnegisnm.in/health
+            curl -f https://mkthub.sahilnegisnm.in/api/health
 
             echo "======================================"
             echo "Deployment Successful"
