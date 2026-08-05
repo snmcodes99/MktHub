@@ -19,14 +19,14 @@ graph TD
         Nginx -->|Route /*| Frontend[Frontend Container: React SPA]
         Nginx -->|Route /api/*| API[Backend Container: Express 5 API]
         
-        API -->|Cache & Message Broker| Redis[(Redis Container)]
+        API -->|Cache & Message Broker| Redis[Redis Container]
         Redis -->|Consume Jobs| Workers[Background Workers]
     end
     
     Workers -->|Generate Invoice| PDF[pdfkit]
     Workers -->|Send Email| SMTP[Nodemailer]
     
-    API -->|Mongoose ODM Transactions| DB[(MongoDB Atlas Cloud)]
+    API -->|Mongoose ODM Transactions| DB[MongoDB Atlas Cloud]
     Cron[Node-Cron Scheduler] -->|Revert Abandoned Carts| DB
     API -->|HMAC Webhooks| Razorpay[Razorpay API]
     API -->|multer| Cloudinary[Cloudinary CDN]
@@ -47,10 +47,10 @@ sequenceDiagram
     Route->>Auth: Incoming HTTP Request
     Auth->>Controller: req.user attached
     Controller->>Service: req.body, req.params
-    Service->>DB: Exec Mongoose Queries (.lean() for Reads)
+    Service->>DB: Exec Mongoose Queries - lean for Reads
     DB-->>Service: Return Documents
     Service-->>Controller: Return Data
-    Controller-->>Route: res.status(200).json()
+    Controller-->>Route: res.status 200 .json
 ```
 
 ## 5. Step-by-step Implementation

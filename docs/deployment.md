@@ -18,8 +18,8 @@ graph TD
         Nginx Proxy -->|/api/*| Backend[Express Container :3000]
         Nginx Proxy -->|/*| Frontend[React Nginx Container :80]
         
-        Backend -->|TCP :6379| Redis[(Redis Container)]
-        Backend -->|Mongoose| Atlas[(MongoDB Atlas Cloud)]
+        Backend -->|TCP :6379| Redis[Redis Container]
+        Backend -->|Mongoose| Atlas[MongoDB Atlas Cloud]
         
         Certbot[Certbot Sidecar] -->|Renew Certs| Nginx Proxy
     end
