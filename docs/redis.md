@@ -14,9 +14,9 @@ The mkthub backend utilizes Redis (`redis` npm package) for two distinct archite
 ```mermaid
 graph TD
     API[Express HTTP API] -->|Cache-Aside| Utils[redis.utils.js]
-    Utils -->|GET / SET / DEL| Redis[(Redis Server)]
+    Utils -->|GET SET DEL| Redis[(Redis Server)]
     
-    API -->|queue.add()| BullMQ[BullMQ Queues]
+    API -->|queue.add| BullMQ[BullMQ Queues]
     BullMQ -->|Broker| Redis
     
     Redis -->|Push Job| Worker[startWorkers.js]

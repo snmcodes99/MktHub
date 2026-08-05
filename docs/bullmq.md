@@ -27,8 +27,8 @@ graph TD
         W2[invoiceWorker.js]
     end
     
-    API -->|queue.add()| Q1
-    API -->|queue.add()| Q2
+    API -->|queue.add| Q1
+    API -->|queue.add| Q2
     Q1 -->|Push Job| Redis
     Q2 -->|Push Job| Redis
     Redis -->|Consume Job| W1
