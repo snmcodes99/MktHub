@@ -22,10 +22,10 @@ graph TD
     end
     
     subgraph Background Processing Layer
-        Cache -->|BullMQ Jobs| Workers[startWorkers.js]
+        Cache -->|BullMQ Jobs| Workers[Worker Processes]
         Workers -->|invoiceQueue| PDF[pdfkit]
-        Workers -->|emailQueue| Email[nodemailer]
-        Cron[node-cron: schedular.js] -->|Audits Expirations| DB
+        Workers -->|emailQueue| SMTP[Nodemailer / SMTP]
+        Cron[node-cron: schedular.js] -->|Audits Expirations| DB[(MongoDB Atlas)]
     end
     
     API -->|HMAC Verification| Razorpay[Razorpay Webhooks]

@@ -62,6 +62,7 @@ graph TD
     subgraph Background Processing Layer
         Cache -->|BullMQ Jobs| Workers[startWorkers.js]
         Workers -->|invoiceQueue| PDF[pdfkit]
+        Workers -->|emailQueue| SMTP[Nodemailer / SMTP]
         Cron[node-cron] -->|Audits Expirations| DB
     end
 
