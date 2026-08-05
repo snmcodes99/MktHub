@@ -13,15 +13,15 @@ The API layer is structurally decoupled from business logic, functioning purely 
 ```mermaid
 graph TD
     Client[React Axios] -->|HTTP Request| Route[Express Router]
-    Route --> Val[express-validator]
-    Val --> Ctrl[Thin Controller]
+    Route --> Val["express-validator"]
+    Val --> Ctrl["Thin Controller"]
     
-    Ctrl -->|Delegates Logic| Svc[Service Layer]
+    Ctrl -->|Delegates Logic| Svc["Service Layer"]
     Svc -- Returns Data / Throws ApiError --> Ctrl
     
-    Ctrl -->|Formats Success| Res[res.status(200).json]
-    Ctrl -.->|Unhandled Promise (Express 5)| ErrMid[errorMiddleware.js]
-    ErrMid -.->|Formats Failure| ResErr[res.status(400).json]
+    Ctrl -->|Formats Success| Res["res.status(200).json"]
+    Ctrl -.->|Unhandled Promise (Express 5)| ErrMid["errorMiddleware.js"]
+    ErrMid -.->|Formats Failure| ResErr["res.status(400).json"]
 ```
 
 ## 4. Execution Flows
