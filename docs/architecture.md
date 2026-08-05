@@ -53,6 +53,11 @@ sequenceDiagram
     Controller-->>Route: res.status 200 .json
 ```
 
+### Global API Error Handling
+The system handles errors centrally on both the frontend and backend to provide a resilient user experience:
+- **Frontend (`axiosClient.js`)**: An Axios interceptor catches all non-200 responses globally. It standardizes error messages, handles silent token refreshes on 401s, and seamlessly manages UI feedback (like toast notifications) without requiring repetitive `catch` blocks in individual React components.
+- **Backend (`errorMiddleware.js`)**: Express 5 automatically routes all unhandled promise rejections to a central error middleware. This layer intercepts database exceptions (e.g., MongoDB 11000 Duplicate Key) and custom `ApiError` instances, sanitizing stack traces and mapping them into a uniform `{ success: false, message }` JSON contract.
+
 ## 5. Step-by-step Implementation
 
 1. **Client Rendering:** The React 19 frontend utilizes React Query to cache Server State globally, interacting with the backend via Axios interceptors that silently rotate JWT Refresh Tokens.
