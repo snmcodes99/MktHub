@@ -51,22 +51,22 @@ The system utilizes a decoupled architecture where the React SPA interacts with 
 
 ```mermaid
 graph TD
-    Client[React 19 / Vite SPA] -->|HTTPS| Proxy[Nginx Container]
+    Client[Web Browser] -->|HTTPS 443| Nginx[Nginx Proxy Container]
     
-    subgraph Express HTTP Layer
-        Proxy -->|/api/*| API[Express 5 API: app.js]
-        API -->|Mongoose ODM| DB[(MongoDB Atlas)]
-        API -->|redis.utils.js| Cache[(Redis)]
+    subgraph Docker Compose Network
+        Nginx -->|Route /*| Frontend[Frontend Container: React SPA]
+        Nginx -->|Route /api/*| API[Backend Container: Express 5 API]
+        
+        API -->|Cache & Message Broker| Redis[(Redis Container)]
+        Redis -->|Consume Jobs| Workers[Background Workers]
     end
     
-    subgraph Background Processing Layer
-        Cache -->|BullMQ Jobs| Workers[startWorkers.js]
-        Workers -->|invoiceQueue| PDF[pdfkit]
-        Workers -->|emailQueue| SMTP[Nodemailer / SMTP]
-        Cron[node-cron] -->|Audits Expirations| DB
-    end
-
-    API -->|HMAC Verification| Razorpay[Razorpay Webhooks]
+    Workers -->|Generate Invoice| PDF[pdfkit]
+    Workers -->|Send Email| SMTP[Nodemailer]
+    
+    API -->|Mongoose ODM Transactions| DB[(MongoDB Atlas Cloud)]
+    Cron[Node-Cron Scheduler] -->|Revert Abandoned Carts| DB
+    API -->|HMAC Webhooks| Razorpay[Razorpay API]
 ```
 
 [Read more about the System Architecture → docs/architecture.md](docs/architecture.md)
@@ -113,6 +113,9 @@ Explore the `docs/` directory for deep-dive technical explanations of the system
 ```bash
 # Clone the repository
 git clone https://github.com/snmcodes99/mkthub.git
+
+# Start local infrastructure (MongoDB & Redis)
+docker compose -f docker-compose.dev.yml up -d
 
 # Install backend dependencies
 cd backend
