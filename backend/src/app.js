@@ -14,6 +14,7 @@ const adminRoutes=require("./routes/adminRoutes")
 const sellerRoutes = require("./routes/sellerRoutes");
 const paymentRoutes=require("./routes/paymentRoutes")
 const webhookRoutes = require("./routes/webhookRoutes")
+const healthRoutes = require("./routes/healthRoutes")
 const helmet = require("helmet");
 const app=express();
 app.use(helmet());
@@ -41,6 +42,7 @@ app.use("/api/review",reviewRoutes)
 app.use("/api/admin",adminRoutes)
 app.use("/api/seller", sellerRoutes)
 app.use("/api/payments",paymentRoutes)
+app.use("/api/health", healthRoutes)
 
 
 app.use(errorMiddleware)
