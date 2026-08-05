@@ -17,39 +17,22 @@ This repository enforces strict engineering standards. Whether you are adding a 
    cd MktHub
    ```
 
-2. **Start Local Infrastructure:**
-   MktHub relies on MongoDB and Redis. For local development, spin up these dependencies using the provided Docker Compose development file:
-   ```bash
-   docker compose -f docker-compose.dev.yml up -d
-   ```
-   *This starts MongoDB on port 27017 and Redis on port 6379.*
-
-3. **Install Dependencies:**
-   ```bash
-   # In terminal 1 (Backend)
-   cd backend
-   npm install
-
-   # In terminal 2 (Frontend)
-   cd frontend
-   npm install
-   ```
-
-4. **Environment Variables:**
-   Copy the example environment files and fill in the required keys (e.g., Razorpay test keys, JWT secrets).
+2. **Environment Variables:**
+   MktHub uses **MongoDB Atlas** for database persistence. There is no local MongoDB container. You must configure your Atlas connection string before starting.
    ```bash
    cp backend/.env.example backend/.env
    cp frontend/.env.example frontend/.env
    ```
+   *Fill in your `MONGO_URI`, Razorpay keys, and JWT secrets in `backend/.env`.*
 
-5. **Run the Application:**
+3. **Start Local Development Stack:**
+   The easiest way to develop locally is using the Docker Compose development file, which spins up the Frontend, Backend, and a local Redis container with hot-reloading (via volume mounts).
    ```bash
-   # In terminal 1 (Backend)
-   npm run dev
-
-   # In terminal 2 (Frontend)
-   npm run dev
+   docker compose -f docker-compose.dev.yml up --build
    ```
+   *Frontend: `http://localhost:5173` | Backend: `http://localhost:3000` | Redis: `6379`*
+
+   *(Optional) Native Node.js Dev:* If you prefer running `npm run dev` manually, you must still spin up a local Redis instance (`docker run -d -p 6379:6379 redis:7-alpine`) and run `npm install && npm run dev` in both the `backend` and `frontend` directories independently.
 
 ## 3. Backend Development Guidelines
 
