@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/product/ProductCard"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Pagination } from "@/components/ui/pagination"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /* ──────────────────────────────────────────────────────────────
    Shared filter content (used in sidebar + mobile drawer)
@@ -31,9 +32,9 @@ function FilterContent({
         <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Categories</h4>
         <div className="space-y-2">
           {categoriesLoading ? (
-            <div className="space-y-2 animate-pulse">
+            <div className="space-y-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-4 bg-muted rounded" style={{ width: `${60 + i * 8}%` }} />
+                <Skeleton key={i} className="h-4" style={{ width: `${60 + i * 8}%` }} />
               ))}
             </div>
           ) : categories.length === 0 ? (
@@ -280,13 +281,13 @@ export default function ProductListingPage() {
           {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="rounded-2xl border bg-card overflow-hidden animate-pulse">
-                  <div className="aspect-[4/3] sm:aspect-square bg-muted" />
+                <div key={i} className="rounded-2xl border bg-card overflow-hidden">
+                  <Skeleton className="aspect-[4/3] sm:aspect-square rounded-none" />
                   <div className="p-3 sm:p-4 space-y-2">
-                    <div className="h-3 w-1/3 bg-muted rounded" />
-                    <div className="h-4 w-4/5 bg-muted rounded" />
-                    <div className="h-3 w-1/2 bg-muted rounded" />
-                    <div className="h-5 w-1/3 bg-muted rounded" />
+                    <Skeleton className="h-3 w-1/3" />
+                    <Skeleton className="h-4 w-4/5" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-5 w-1/3 mt-2" />
                   </div>
                 </div>
               ))}
@@ -305,7 +306,19 @@ export default function ProductListingPage() {
                 <Search className="h-8 w-8 text-muted-foreground" />
               </div>
               <p className="font-semibold text-lg">No products found</p>
-              <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+              <p className="text-sm text-muted-foreground mb-2">Try adjusting your search or filters.</p>
+              {activeFilterCount > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSelectedCategories([])
+                    setMinPrice("")
+                    setMaxPrice("")
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           ) : (
             <>

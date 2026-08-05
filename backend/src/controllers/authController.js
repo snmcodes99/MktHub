@@ -25,15 +25,31 @@ const login = async (req, res) => {
 
 const refresh = async (req, res) => {
     const oldRefreshToken = req.cookies.refreshToken
-    const { accessToken, refreshToken } = await authService.refreshSession(oldRefreshToken)
-    res.cookie("refreshToken", refreshToken, getRefreshCookieOptions())
-    res.status(200).json({
-        success: true,
-        message: "Token refreshed successfuly",
-        data: {
-            accessToken
-        }
-    })
+    if (!oldRefreshToken) {
+        return res.status(200).json({
+            success: false,
+            message: "No refresh token",
+            data: { accessToken: null }
+        })
+    }
+    try {
+        const { accessToken, refreshToken } = await authService.refreshSession(oldRefreshToken)
+        res.cookie("refreshToken", refreshToken, getRefreshCookieOptions())
+        res.status(200).json({
+            success: true,
+            message: "Token refreshed successfuly",
+            data: {
+                accessToken
+            }
+        })
+    } catch (error) {
+        res.clearCookie("refreshToken", getRefreshCookieOptions())
+        return res.status(200).json({
+            success: false,
+            message: "Invalid or expired refresh token",
+            data: { accessToken: null }
+        })
+    }
 }
 
 const getCurrentUser = async (req, res) => {

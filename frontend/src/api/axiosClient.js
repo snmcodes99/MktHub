@@ -72,7 +72,10 @@ axiosClient.interceptors.response.use(
 
       try {
         const res = await axiosClient.post("/auth/refresh")
-        const newAccessToken = res.data.data.accessToken
+        const newAccessToken = res.data?.data?.accessToken
+        if (!newAccessToken) {
+          throw new Error("Session expired or missing")
+        }
         localStorage.setItem("accessToken", newAccessToken)
         axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`
         processQueue(null, newAccessToken)

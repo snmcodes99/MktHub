@@ -7,6 +7,7 @@ import { getCart, updateCartItem, removeCartItem } from "@/api/cartApi"
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function CartPage() {
@@ -21,22 +22,60 @@ export default function CartPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, quantity }) => updateCartItem(id, { quantity }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] })
+    onMutate: async (newUpdate) => {
+      await queryClient.cancelQueries({ queryKey: ["cart"] })
+      const previousCart = queryClient.getQueryData(["cart"])
+      queryClient.setQueryData(["cart"], old => {
+        if (!old) return old
+        const newCart = structuredClone(old)
+        const item = newCart.data.data.items.find(i => i.product._id === newUpdate.id)
+        if (item) {
+          // Adjust totals optimistically
+          const diff = newUpdate.quantity - item.quantity
+          item.quantity = newUpdate.quantity
+          newCart.data.data.totalItems += diff
+          newCart.data.data.totalPrice += diff * item.product.sellingPrice
+        }
+        return newCart
+      })
+      return { previousCart }
     },
-    onError: (error) => {
+    onError: (error, newUpdate, context) => {
+      queryClient.setQueryData(["cart"], context?.previousCart)
       toast.error(error.response?.data?.message || "Failed to update quantity")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
     }
   })
 
   const removeMutation = useMutation({
     mutationFn: removeCartItem,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["cart"] })
+      const previousCart = queryClient.getQueryData(["cart"])
+      queryClient.setQueryData(["cart"], old => {
+        if (!old) return old
+        const newCart = structuredClone(old)
+        const item = newCart.data.data.items.find(i => i.product._id === id)
+        if (item) {
+          newCart.data.data.totalItems -= item.quantity
+          newCart.data.data.totalPrice -= item.quantity * item.product.sellingPrice
+          newCart.data.data.items = newCart.data.data.items.filter(i => i.product._id !== id)
+        }
+        return newCart
+      })
+      return { previousCart }
+    },
     onSuccess: () => {
       toast.success("Item removed from cart")
-      queryClient.invalidateQueries({ queryKey: ["cart"] })
     },
-    onError: (error) => {
+    onError: (error, id, context) => {
+      queryClient.setQueryData(["cart"], context?.previousCart)
       toast.error(error.response?.data?.message || "Failed to remove item")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
     }
   })
 
@@ -62,14 +101,14 @@ export default function CartPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="mb-8 text-3xl font-bold tracking-tight">Shopping Cart</h1>
-        <div className="flex animate-pulse flex-col gap-6 lg:flex-row">
+        <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex-1 space-y-4">
             {[1, 2].map((i) => (
-              <div key={i} className="h-32 rounded-xl bg-muted" />
+              <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </div>
           <div className="w-full lg:w-96">
-            <div className="h-64 rounded-xl bg-muted" />
+            <Skeleton className="h-64 rounded-xl" />
           </div>
         </div>
       </div>
@@ -133,6 +172,7 @@ export default function CartPage() {
                       className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50"
                       onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
                       disabled={item.quantity <= 1 || updateMutation.isPending}
+                      aria-label="Decrease quantity"
                     >
                       <Minus className="h-4 w-4" />
                     </button>
@@ -156,12 +196,14 @@ export default function CartPage() {
                         }
                       }}
                       disabled={updateMutation.isPending}
+                      aria-label="Quantity"
                       className="flex h-8 w-12 items-center justify-center font-medium text-sm border-x text-center bg-transparent focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50"
                       onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
                       disabled={item.quantity >= item.product.stock || updateMutation.isPending}
+                      aria-label="Increase quantity"
                     >
                       <Plus className="h-4 w-4" />
                     </button>

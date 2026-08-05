@@ -128,7 +128,7 @@ export default function CustomerAddresses() {
         <Card className="animate-fade-in border-primary">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{editingId ? "Edit Address" : "Add New Address"}</CardTitle>
-            <Button variant="ghost" size="icon" onClick={closeForm}>
+            <Button variant="ghost" size="icon" onClick={closeForm} aria-label="Close address form">
               <X className="h-5 w-5" />
             </Button>
           </CardHeader>

@@ -256,7 +256,7 @@ function MobileLoginPanel({ onSwitch }) {
   const [isLoading, setIsLoading] = useState(false)
   const [unverifiedEmail, setUnverifiedEmail] = useState(null)
 
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm({
+  const { register, handleSubmit, getValues, setError, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
   })
 
@@ -272,9 +272,16 @@ function MobileLoginPanel({ onSwitch }) {
       else if (user.role === "SELLER") navigate("/seller")
       else navigate("/dashboard")
     } catch (err) {
-      if (err.response?.status === 403) setUnverifiedEmail(getValues("email"))
-      else toast.error(err.response?.data?.message || "Login failed.")
-    } finally { setIsLoading(false) }
+      if (err.response?.status === 403) {
+        setUnverifiedEmail(getValues("email"))
+      } else {
+        toast.error("Incorrect email or password.")
+        setError("email", { type: "manual", message: " " })
+        setError("password", { type: "manual", message: "Incorrect email or password" })
+      }
+    } finally { 
+      setIsLoading(false) 
+    }
   }
 
   return (
@@ -375,7 +382,7 @@ function LoginPanel({ visible, onSwitch }) {
   const [isLoading, setIsLoading] = useState(false)
   const [unverifiedEmail, setUnverifiedEmail] = useState(null)
 
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm({
+  const { register, handleSubmit, getValues, setError, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
   })
 
@@ -391,9 +398,16 @@ function LoginPanel({ visible, onSwitch }) {
       else if (user.role === "SELLER") navigate("/seller")
       else navigate("/dashboard")
     } catch (err) {
-      if (err.response?.status === 403) setUnverifiedEmail(getValues("email"))
-      else toast.error(err.response?.data?.message || "Login failed.")
-    } finally { setIsLoading(false) }
+      if (err.response?.status === 403) {
+        setUnverifiedEmail(getValues("email"))
+      } else {
+        toast.error("Incorrect email or password.")
+        setError("email", { type: "manual", message: " " })
+        setError("password", { type: "manual", message: "Incorrect email or password" })
+      }
+    } finally { 
+      setIsLoading(false) 
+    }
   }
 
   return (

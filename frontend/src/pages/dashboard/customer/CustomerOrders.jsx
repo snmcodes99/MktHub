@@ -15,6 +15,7 @@ import { ORDER_STATUS_FLOW } from "@/lib/constants"
 import { toast } from "sonner"
 import { Link } from "react-router-dom"
 import { Pagination } from "@/components/ui/pagination"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Status config with icon, color classes, and label
 const STATUS_CONFIG = {
@@ -186,13 +187,6 @@ export default function CustomerOrders() {
 
   const STAR_LABELS = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Very Good", 5: "Excellent" }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6 w-full">
@@ -229,8 +223,19 @@ export default function CustomerOrders() {
       </div>
 
       {isLoading ? (
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </div>
+          ))}
         </div>
       ) : orders.length === 0 ? (
         <div className="flex h-[400px] flex-col items-center justify-center text-center border border-dashed rounded-2xl bg-card/50">
@@ -238,7 +243,10 @@ export default function CustomerOrders() {
             <PackageSearch className="h-10 w-10 text-muted-foreground" />
           </div>
           <h3 className="text-xl font-bold text-foreground">No orders found</h3>
-          <p className="text-muted-foreground mt-1">Your order history will appear here.</p>
+          <p className="text-muted-foreground mt-1 mb-6">Your order history will appear here. Start shopping to get your first order!</p>
+          <Link to="/products">
+            <Button className="rounded-full px-8">Start Shopping</Button>
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

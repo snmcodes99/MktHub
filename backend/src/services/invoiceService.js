@@ -4,8 +4,7 @@ const { sendEmail } = require("./emailService");
 
 const generateAndSendInvoice = async (orderId) => {
 
-    const order = await OrderModel.findById(orderId)
-        .populate("user", "name email phone");
+    const order = await OrderModel.findById(orderId).populate("user", "name email phone");
 
     if (!order) {
         throw new Error("Order not found");

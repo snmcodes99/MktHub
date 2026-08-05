@@ -90,6 +90,9 @@ function DashboardLayout() {
   )
 }
 
+import React, { Suspense } from "react"
+import { PageLoader } from "@/components/layout/PageLoader"
+
 import LandingPage from "@/pages/LandingPage"
 import LoginPage from "@/pages/auth/LoginPage"
 import RegisterPage from "@/pages/auth/RegisterPage"
@@ -100,82 +103,85 @@ import VerifyEmailChangePage from "@/pages/auth/VerifyEmailChangePage"
 import ProductListingPage from "@/pages/product/ProductListingPage"
 import ProductDetailPage from "@/pages/product/ProductDetailPage"
 import CartPage from "@/pages/cart/CartPage"
-import CheckoutPage from "@/pages/cart/CheckoutPage"
 
-import CustomerDashboard from "@/pages/dashboard/CustomerDashboard"
-import CustomerOverview from "@/pages/dashboard/customer/CustomerOverview"
-import CustomerProfile from "@/pages/dashboard/customer/CustomerProfile"
-import CustomerOrders from "@/pages/dashboard/customer/CustomerOrders"
-import CustomerOrderDetails from "@/pages/dashboard/customer/CustomerOrderDetails"
-import CustomerAddresses from "@/pages/dashboard/customer/CustomerAddresses"
-import SellerApplication from "@/pages/dashboard/customer/SellerApplication"
+const CheckoutPage = React.lazy(() => import("@/pages/cart/CheckoutPage"))
 
-import SellerDashboard from "@/pages/dashboard/SellerDashboard"
-import SellerOverview from "@/pages/dashboard/seller/SellerOverview"
-import SellerProducts from "@/pages/dashboard/seller/SellerProducts"
-import SellerOrders from "@/pages/dashboard/seller/SellerOrders"
+const CustomerDashboard = React.lazy(() => import("@/pages/dashboard/CustomerDashboard"))
+const CustomerOverview = React.lazy(() => import("@/pages/dashboard/customer/CustomerOverview"))
+const CustomerProfile = React.lazy(() => import("@/pages/dashboard/customer/CustomerProfile"))
+const CustomerOrders = React.lazy(() => import("@/pages/dashboard/customer/CustomerOrders"))
+const CustomerOrderDetails = React.lazy(() => import("@/pages/dashboard/customer/CustomerOrderDetails"))
+const CustomerAddresses = React.lazy(() => import("@/pages/dashboard/customer/CustomerAddresses"))
+const SellerApplication = React.lazy(() => import("@/pages/dashboard/customer/SellerApplication"))
 
-import AdminDashboard from "@/pages/dashboard/AdminDashboard"
-import AdminOverview from "@/pages/dashboard/admin/AdminOverview"
-import AdminUsers from "@/pages/dashboard/admin/AdminUsers"
-import AdminProducts from "@/pages/dashboard/admin/AdminProducts"
-import AdminCategories from "@/pages/dashboard/admin/AdminCategories"
-import AdminSellerRequests from "@/pages/dashboard/admin/AdminSellerRequests"
-import AdminOrders from "@/pages/dashboard/admin/AdminOrders"
+const SellerDashboard = React.lazy(() => import("@/pages/dashboard/SellerDashboard"))
+const SellerOverview = React.lazy(() => import("@/pages/dashboard/seller/SellerOverview"))
+const SellerProducts = React.lazy(() => import("@/pages/dashboard/seller/SellerProducts"))
+const SellerOrders = React.lazy(() => import("@/pages/dashboard/seller/SellerOrders"))
+
+const AdminDashboard = React.lazy(() => import("@/pages/dashboard/AdminDashboard"))
+const AdminOverview = React.lazy(() => import("@/pages/dashboard/admin/AdminOverview"))
+const AdminUsers = React.lazy(() => import("@/pages/dashboard/admin/AdminUsers"))
+const AdminProducts = React.lazy(() => import("@/pages/dashboard/admin/AdminProducts"))
+const AdminCategories = React.lazy(() => import("@/pages/dashboard/admin/AdminCategories"))
+const AdminSellerRequests = React.lazy(() => import("@/pages/dashboard/admin/AdminSellerRequests"))
+const AdminOrders = React.lazy(() => import("@/pages/dashboard/admin/AdminOrders"))
 
 export default function App() {
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothTouch: false }}>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<Layout />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
-            <Route path="/verify-email-change/:token" element={<VerifyEmailChangePage />} />
-            <Route path="/products" element={<ProductListingPage />} />
-            <Route path="/products/:id" element={<ProductDetailPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/checkout" element={<CheckoutPage />} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<Layout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+              <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+              <Route path="/verify-email-change/:token" element={<VerifyEmailChangePage />} />
+              <Route path="/products" element={<ProductListingPage />} />
+              <Route path="/products/:id" element={<ProductDetailPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/checkout" element={<CheckoutPage />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Dashboard Routes (Protected) */}
-          <Route element={<DashboardLayout />}>
-            <Route element={<ProtectedRoute allowedRoles={["CUSTOMER", "SELLER", "ADMIN"]} />}>
-              <Route path="/dashboard" element={<CustomerDashboard />}>
-                <Route index element={<CustomerOverview />} />
-                <Route path="profile" element={<CustomerProfile />} />
-                <Route path="orders" element={<CustomerOrders />} />
-                <Route path="orders/:id" element={<CustomerOrderDetails />} />
-                <Route path="addresses" element={<CustomerAddresses />} />
-                <Route path="apply-seller" element={<SellerApplication />} />
+            {/* Dashboard Routes (Protected) */}
+            <Route element={<DashboardLayout />}>
+              <Route element={<ProtectedRoute allowedRoles={["CUSTOMER", "SELLER", "ADMIN"]} />}>
+                <Route path="/dashboard" element={<CustomerDashboard />}>
+                  <Route index element={<CustomerOverview />} />
+                  <Route path="profile" element={<CustomerProfile />} />
+                  <Route path="orders" element={<CustomerOrders />} />
+                  <Route path="orders/:id" element={<CustomerOrderDetails />} />
+                  <Route path="addresses" element={<CustomerAddresses />} />
+                  <Route path="apply-seller" element={<SellerApplication />} />
+                </Route>
+              </Route>
+              <Route element={<ProtectedRoute allowedRoles={["SELLER", "ADMIN"]} />}>
+                <Route path="/seller" element={<SellerDashboard />}>
+                  <Route index element={<SellerOverview />} />
+                  <Route path="products" element={<SellerProducts />} />
+                  <Route path="orders" element={<SellerOrders />} />
+                </Route>
+              </Route>
+              <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+                <Route path="/admin" element={<AdminDashboard />}>
+                  <Route index element={<AdminOverview />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="requests" element={<AdminSellerRequests />} />
+                </Route>
               </Route>
             </Route>
-            <Route element={<ProtectedRoute allowedRoles={["SELLER", "ADMIN"]} />}>
-              <Route path="/seller" element={<SellerDashboard />}>
-                <Route index element={<SellerOverview />} />
-                <Route path="products" element={<SellerProducts />} />
-                <Route path="orders" element={<SellerOrders />} />
-              </Route>
-            </Route>
-            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-              <Route path="/admin" element={<AdminDashboard />}>
-                <Route index element={<AdminOverview />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="requests" element={<AdminSellerRequests />} />
-              </Route>
-            </Route>
-          </Route>
-        </Routes>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </ReactLenis>
   )

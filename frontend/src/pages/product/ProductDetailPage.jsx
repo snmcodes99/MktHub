@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { formatPrice, getDiscount } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ProductReviews } from "@/components/product/ProductReviews"
 
 export default function ProductDetailPage() {
@@ -62,8 +63,35 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="bg-background min-h-screen pb-12">
+        <div className="border-b border-border bg-background py-3">
+          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+            <Skeleton className="h-4 w-1/3" />
+          </div>
+        </div>
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 md:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+            <div className="lg:col-span-5 flex flex-col md:flex-row gap-4">
+              <div className="flex md:flex-col gap-3">
+                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="w-16 h-16 md:w-20 md:h-20 rounded-xl" />)}
+              </div>
+              <Skeleton className="flex-1 aspect-square rounded-2xl" />
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <div className="space-y-2 mt-8">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+            <div className="lg:col-span-3">
+              <Skeleton className="h-[300px] w-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -256,6 +284,7 @@ export default function ProductDetailPage() {
                     className="flex h-9 w-9 items-center justify-center hover:bg-muted disabled:opacity-50 transition-colors"
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
                     disabled={quantity <= 1 || product.stock === 0}
+                    aria-label="Decrease quantity"
                   >
                     <Minus className="h-3 w-3 text-foreground" />
                   </button>
@@ -271,12 +300,14 @@ export default function ProductDetailPage() {
                     }}
                     onBlur={() => { if (quantity === "" || quantity < 1) setQuantity(1); }}
                     disabled={product.stock === 0}
+                    aria-label="Quantity"
                     className="flex h-9 w-10 items-center justify-center font-semibold text-sm text-center bg-transparent border-x border-border focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-foreground"
                   />
                   <button
                     className="flex h-9 w-9 items-center justify-center hover:bg-muted disabled:opacity-50 transition-colors"
                     onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
                     disabled={quantity >= product.stock || product.stock === 0}
+                    aria-label="Increase quantity"
                   >
                     <Plus className="h-3 w-3 text-foreground" />
                   </button>

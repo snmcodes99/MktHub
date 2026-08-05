@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/pagination"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -176,14 +177,6 @@ export default function SellerProducts() {
   const products = data?.data?.data?.products || []
   const categories = categoryData?.data?.data || []
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6 relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -213,29 +206,61 @@ export default function SellerProducts() {
 
       <Card>
         <CardContent className="p-0">
-          {products.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center text-center">
-              <div className="mb-4 rounded-full bg-muted p-4">
-                <Package className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold">No products found</h3>
-              <p className="text-muted-foreground">Try adjusting your search criteria, or click Add Product.</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Image</TableHead>
+                <TableHead>Product Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Stock</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-12 w-12 rounded-md" /></TableCell>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-6 w-10 ml-auto rounded-full" /></TableCell>
+                    <TableCell className="text-center"><Skeleton className="h-8 w-20 mx-auto rounded-full" /></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Skeleton className="h-8 w-8 rounded-md" />
+                        <Skeleton className="h-8 w-8 rounded-md" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : products.length === 0 ? (
                 <TableRow>
-                  <TableHead className="w-[80px]">Image</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableCell colSpan={7} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="mb-4 rounded-full bg-muted p-4">
+                        <Package className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold">No products found</h3>
+                      <p className="text-muted-foreground mb-4 mt-1">Get started by creating your first product listing.</p>
+                      <Button onClick={() => {
+                        setProductForm(initialProductState)
+                        setAddModalOpen(true)
+                      }}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Product
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => (
+              ) : (
+                products.map((product) => (
                   <TableRow key={product._id} className={!product.isActive ? "opacity-60" : ""}>
                     <TableCell>
                       <div className="h-12 w-12 overflow-hidden rounded-md border bg-muted flex items-center justify-center">
@@ -283,7 +308,7 @@ export default function SellerProducts() {
                        </Button>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(product)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(product)} aria-label={`Edit ${product.name}`}>
                         <Edit2 className="h-4 w-4 text-muted-foreground" />
                       </Button>
                       <Button 
@@ -291,15 +316,16 @@ export default function SellerProducts() {
                         size="icon" 
                         className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setDeleteModal(product)}
+                        aria-label={`Delete ${product.name}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              )}
               </TableBody>
             </Table>
-          )}
           {data?.data?.data?.pagination && (
             <Pagination 
               currentPage={page} 
@@ -359,7 +385,7 @@ export default function SellerProducts() {
               <Button variant="ghost" size="icon" onClick={() => {
                 setAddModalOpen(false)
                 setEditModalOpen(false)
-              }}>
+              }} aria-label="Close product modal">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -469,7 +495,7 @@ export default function SellerProducts() {
                           onChange={(e) => handleHighlightChange(index, e.target.value)}
                         />
                         {(productForm.keyHighlights?.length || 1) > 1 && (
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeHighlightField(index)} className="shrink-0 text-destructive hover:bg-destructive/10">
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removeHighlightField(index)} className="shrink-0 text-destructive hover:bg-destructive/10" aria-label="Remove highlight">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}

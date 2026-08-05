@@ -64,7 +64,7 @@ export default function CustomerOrderDetails() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/orders")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/orders")} aria-label="Back to orders">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>

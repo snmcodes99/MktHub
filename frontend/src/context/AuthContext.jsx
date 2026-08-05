@@ -21,7 +21,10 @@ export function AuthProvider({ children }) {
       // No access token — try a silent refresh using the HttpOnly cookie
       try {
         const res = await refreshTokenApi()
-        const newAccessToken = res.data.data.accessToken
+        const newAccessToken = res.data?.data?.accessToken
+        if (!newAccessToken) {
+          throw new Error("No valid session")
+        }
         localStorage.setItem("accessToken", newAccessToken)
         const userRes = await getCurrentUser()
         setUser(userRes.data.data)

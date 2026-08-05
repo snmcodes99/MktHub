@@ -126,8 +126,8 @@ export function Navbar() {
                       <span className="font-semibold">Account</span>
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={logout} className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95">
-                    <LogOut className="h-[18px] w-[18px]" />
+                  <Button variant="ghost" size="icon" onClick={logout} className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95" aria-label="Log out">
+                    <LogOut className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
