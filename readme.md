@@ -112,19 +112,36 @@ Explore the `docs/` directory for deep-dive technical explanations of the system
 ### 1. Environment Configuration
 MktHub uses **MongoDB Atlas** for database persistence (there is no local MongoDB container) and **Redis** for caching/queues. You must configure your environment variables before starting.
 
-```bash
-# Clone the repository
-git clone https://github.com/snmcodes99/mkthub.git
-cd mkthub
+Create a `backend/.env` file with the following required keys (you can leave Redis as-is for local docker):
 
-# Copy environment files
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+```env
+PORT=3000
+MONGO_URI=mongodb+srv://<user>:<password>@cluster0...
+JWT_SECRET=your_super_secret_jwt_string
+
+RAZORPAY_KEY_ID=rzp_test_xxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxx
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
+
+EMAIL_USER=your_email@gmail.com
+EMAIL_APP_PASSWORD=your_app_password
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+FRONTEND_URL=http://localhost:5173
 ```
 
-*Ensure you fill in your `MONGO_URI` (MongoDB Atlas connection string), Razorpay credentials, and JWT secrets in `backend/.env`.*
+Create a `frontend/.env.development` file:
+```env
+VITE_API_URL=http://localhost:3000/api
+```
 
-### 2. Local Development (Dockerized)
+### 2. Local Development (Dockerized - Recommended)
 The easiest way to develop locally is using the provided development compose file, which spins up the Frontend, Backend, and a local Redis container with hot-reloading enabled via Docker volumes.
 
 ```bash
@@ -133,7 +150,24 @@ docker compose -f docker-compose.dev.yml up --build
 ```
 *Frontend will be available at `http://localhost:5173` and Backend at `http://localhost:3000`.*
 
-### 3. Production Deployment
+### 3. Alternative: Native Node.js Dev
+If you prefer running the servers natively using `npm run dev`, you only need to spin up Redis in Docker.
+*(Note: Ensure you change `REDIS_HOST=127.0.0.1` in your `backend/.env` for native mode)*
+
+```bash
+# Start a standalone Redis container
+docker run -d -p 6379:6379 redis:7-alpine
+
+# In terminal 1 (Backend)
+cd backend
+npm install && npm run dev
+
+# In terminal 2 (Frontend)
+cd frontend
+npm install && npm run dev
+```
+
+### 4. Production Deployment
 ```bash
 # Spin up the production optimized containerized infrastructure (including Nginx)
 docker compose up --build -d
