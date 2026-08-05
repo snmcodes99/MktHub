@@ -1,0 +1,46 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "======================================"
+            echo "Starting Deployment..."
+            echo "======================================"
+
+            cd ~/MktHub
+
+            echo "Pulling latest changes..."
+            git pull origin main
+
+            echo "Building and starting containers..."
+            docker compose up --build -d
+
+            echo "Waiting for application to start..."
+            sleep 20
+
+            echo "Checking application health..."
+            curl -f https://mkthub.sahilnegisnm.in/health
+
+            echo "======================================"
+            echo "Deployment Successful"
+            echo "======================================"
