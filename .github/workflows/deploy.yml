@@ -29,8 +29,9 @@ jobs:
 
             cd ~/MktHub
 
-            echo "Pulling latest changes..."
-            git pull origin main
+            echo "Fetching latest changes..."
+            git fetch origin
+            git reset --hard origin/main
 
             echo "Building and starting containers..."
             docker compose up --build -d
