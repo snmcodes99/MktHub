@@ -116,9 +116,18 @@ export default function ProductListingPage() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get("search") || ""
 
+  const categoryQuery = searchParams.get("category")
+  
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(12)
-  const [selectedCategories, setSelectedCategories] = useState([])
+  const [selectedCategories, setSelectedCategories] = useState(categoryQuery ? [categoryQuery] : [])
+
+  useEffect(() => {
+    const cat = searchParams.get("category")
+    if (cat) {
+      setSelectedCategories([cat])
+    }
+  }, [searchParams])
   const [minPrice, setMinPrice] = useState("")
   const [maxPrice, setMaxPrice] = useState("")
   const [sort, setSort] = useState("")

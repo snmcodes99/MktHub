@@ -11,11 +11,12 @@ import { getCategories } from "@/api/categoryApi"
 const POPULAR_CATEGORIES = [
   { name: "Electronics",    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=160&h=160&fit=crop&q=80",  slug: "Electronics" },
   { name: "Clothing",       image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=160&h=160&fit=crop&q=80",  slug: "Clothing" },
+  { name: "Footwear",       image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=160&h=160&fit=crop&q=80", slug: "Footwear" },
+  { name: "Accessories",    image: "https://images.unsplash.com/photo-1523293115678-d29091f8dc52?w=160&h=160&fit=crop&q=80", slug: "Accessories" },
   { name: "Books",          image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=160&h=160&fit=crop&q=80", slug: "Books" },
   { name: "Home & Kitchen", image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=160&h=160&fit=crop&q=80", slug: "Home" },
   { name: "Sports",         image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=160&h=160&fit=crop&q=80", slug: "Sports" },
   { name: "Beauty",         image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=160&h=160&fit=crop&q=80", slug: "Beauty" },
-  { name: "Footwear",       image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=160&h=160&fit=crop&q=80", slug: "Footwear" },
   { name: "Toys",           image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=160&h=160&fit=crop&q=80", slug: "Toys" },
 ]
 
@@ -35,6 +36,7 @@ export default function LandingPage() {
 
   const { data: trendingData,    isLoading: trendingLoading    } = useQuery({ queryKey: ["landing-products", "trending"], queryFn: () => getProducts({ limit: 12 }) })
   const { data: newLaunchesData, isLoading: newLaunchesLoading } = useQuery({ queryKey: ["landing-products", "new"],      queryFn: () => getProducts({ limit: 15, sort: "-createdAt" }) })
+  const { data: categoryData } = useQuery({ queryKey: ["categories"], queryFn: getCategories })
 
   const trendingProducts = trendingData?.data?.data?.products    || []
   const newProducts      = newLaunchesData?.data?.data?.products || []
@@ -121,10 +123,13 @@ export default function LandingPage() {
           className="flex items-start gap-4 sm:gap-6 md:gap-8 overflow-x-auto pb-4 pt-2 -mx-2 px-2 md:flex-wrap md:justify-center"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {POPULAR_CATEGORIES.map((cat) => (
+          {POPULAR_CATEGORIES.filter(cat => categoryData?.data?.data?.some(c => c.name === cat.name)).map((cat) => {
+            const backendCat = categoryData?.data?.data?.find(c => c.name === cat.name)
+            const linkTo = backendCat ? `/products?category=${backendCat._id}` : `/products?search=${cat.name}`
+            return (
             <Link
               key={cat.slug}
-              to={`/products?search=${cat.slug}`}
+              to={linkTo}
               className="flex flex-col items-center gap-3 group shrink-0"
             >
               <div className="relative">
@@ -150,7 +155,8 @@ export default function LandingPage() {
                 {cat.name}
               </span>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
 

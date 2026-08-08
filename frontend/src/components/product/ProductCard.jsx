@@ -38,11 +38,9 @@ export function ProductCard({ product }) {
       {/* Image */}
       <Link to={`/products/${product._id}`} className="relative overflow-hidden bg-muted">
         {/* 
-          Responsive aspect ratio:
-          - Mobile: shorter (4:3) to show more cards
-          - Tablet+: square (1:1) for a cleaner grid
+          Responsive aspect ratio: square with contain to avoid cropping product images.
         */}
-        <div className="aspect-[4/3] sm:aspect-square">
+        <div className="aspect-square bg-white dark:bg-white flex items-center justify-center p-2 sm:p-4">
           <img
             src={product.images?.[0]?.url || product.images?.[0] || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=70"}
             alt={product.name}
@@ -50,7 +48,7 @@ export function ProductCard({ product }) {
             decoding="async"
             width={400}
             height={400}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         </div>
 
