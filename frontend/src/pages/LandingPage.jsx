@@ -12,7 +12,7 @@ const POPULAR_CATEGORIES = [
   { name: "Electronics",    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=160&h=160&fit=crop&q=80",  slug: "Electronics" },
   { name: "Clothing",       image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=160&h=160&fit=crop&q=80",  slug: "Clothing" },
   { name: "Footwear",       image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=160&h=160&fit=crop&q=80", slug: "Footwear" },
-  { name: "Accessories",    image: "https://images.unsplash.com/photo-1523293115678-d29091f8dc52?w=160&h=160&fit=crop&q=80", slug: "Accessories" },
+  { name: "Accessories",    image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=160&h=160&fit=crop&q=80", slug: "Accessories" },
   { name: "Books",          image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=160&h=160&fit=crop&q=80", slug: "Books" },
   { name: "Home & Kitchen", image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=160&h=160&fit=crop&q=80", slug: "Home" },
   { name: "Sports",         image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=160&h=160&fit=crop&q=80", slug: "Sports" },
