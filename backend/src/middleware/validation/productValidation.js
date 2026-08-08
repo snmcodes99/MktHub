@@ -142,6 +142,10 @@ const updateProductValidation = [
     .optional()
     .isBoolean()
     .withMessage("isActive must be a boolean"),
+  body("existingImages")
+    .optional()
+    .isString()
+    .withMessage("existingImages must be a stringified array"),
 ];
 const getProductsValidation = [
   query("page")

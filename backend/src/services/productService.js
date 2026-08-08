@@ -173,23 +173,48 @@ const updateProduct = async (productId, updateData, files, seller) => {
             "Selling price cannot be greater than MRP"
         );
     }
+    let existingImages = [];
+    if (updateData.existingImages !== undefined) {
+        try {
+            existingImages = JSON.parse(updateData.existingImages);
+        } catch(e) {
+            existingImages = [];
+        }
+    }
+
     let uploadedImages = [];
     const oldImages = product.images;
     try {
         if (files && files.length > 0) {
             uploadedImages = await uploadImages(files);
-          updateData.images = uploadedImages;
         }
+        
+        if (updateData.existingImages !== undefined) {
+           updateData.images = [...existingImages, ...uploadedImages];
+        } else if (files && files.length > 0) {
+           updateData.images = uploadedImages;
+        }
+
+        if (updateData.images && (updateData.images.length < 1 || updateData.images.length > 8)) {
+             throw new ApiError(400, "Product must contain between 1 and 8 images.");
+        }
+
         Object.assign(product, updateData);
         await product.save();
         await deleteCache(`product:${productId}`);
         await clearCachePattern("product_list:*");
-        if (files && files.length > 0 && oldImages.length > 0) {
-            const publicIds = oldImages.map(
-                ({ publicId }) => publicId
-            );
+        
+        let imagesToDelete = [];
+        if (updateData.existingImages !== undefined) {
+             const existingPublicIds = existingImages.map(img => img.publicId);
+             imagesToDelete = oldImages.filter(img => !existingPublicIds.includes(img.publicId)).map(img => img.publicId);
+        } else if (files && files.length > 0 && oldImages.length > 0) {
+             imagesToDelete = oldImages.map(img => img.publicId);
+        }
+
+        if (imagesToDelete.length > 0) {
          try {
-                await deleteImages(publicIds);
+                await deleteImages(imagesToDelete);
             } 
             catch (err) {
                 console.error(

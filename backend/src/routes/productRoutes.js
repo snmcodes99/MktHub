@@ -55,7 +55,8 @@ router.patch("/:id",
         "sellingPrice",
         "stock",
         "images",
-        "keyHighlights"
+        "keyHighlights",
+        "existingImages"
     ]),
     mongoIdValidation("id"),
     updateProductValidation,

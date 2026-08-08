@@ -128,12 +128,19 @@ export default function SellerProducts() {
       formData.append("keyHighlights", JSON.stringify(validHighlights))
     }
     
+    const existingImages = []
     if (productForm.images && productForm.images.length > 0) {
       productForm.images.forEach(file => {
         if (file instanceof File) {
           formData.append("images", file)
+        } else {
+          existingImages.push(file)
         }
       })
+    }
+
+    if (editModalOpen) {
+      formData.append("existingImages", JSON.stringify(existingImages))
     }
 
     if (editModalOpen && currentProduct) {
@@ -525,7 +532,6 @@ export default function SellerProducts() {
                             e.target.value = "";
                           }}
                         />
-                        <p className="text-xs text-muted-foreground mt-1 mb-2">Uploading new images will completely replace all existing images.</p>
                         {productForm.images && productForm.images.length > 0 && (
                           <div className="flex gap-2 mt-3 flex-wrap">
                             {productForm.images.map((file, i) => (
